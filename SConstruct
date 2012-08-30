@@ -1,6 +1,7 @@
 
 SRC = [
-    'main.cpp'
+    'main.cpp',
+    '$CEFBIN/obj.target/cef/libcef_dll_wrapper.a',
 ]
 
 env = Environment()
@@ -13,7 +14,7 @@ env.Append(
         '$CEF/src/cef'
     ],
     LIBPATH=[
-        '$CEFBIN/lib.target'
+        '$CEFBIN/obj.target/cef'
     ],
 
     LIBS=[
@@ -25,6 +26,6 @@ env.Append(
 env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
 program = env.Program('leprechaun', SRC)
-libcef = env.Install('#', '$CEFBIN/lib.target/libcef.so')
+libcef = env.Install('#', '$CEFBIN/obj.target/cef/libcef.so')
 
 env.Default([program, libcef])
