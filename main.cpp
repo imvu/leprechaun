@@ -81,36 +81,20 @@ struct ChromeWindowApp : public CefApp {
     IMPLEMENT_REFCOUNTING(ChromeWindowApp);
 };
 
-//ChromeWindow::ChromeWindow(INativeWindowPtr window, const std::wstring& url)
-//    : app(new ChromeWindowApp)
-//    , window(window)
-//{
-    //NativeWindowPtr wnd = boost::dynamic_pointer_cast<NativeWindow>(window);
-    //NSView* contentView = wnd->getView();
 int main(int argc, char** argv) {
     printf("Hello, world!\n");
 
 
     CefMainArgs main_args(argc, argv);
 
+    CefRefPtr<CefApp> app(new ChromeWindowApp);
+
     CefSettings appSettings;
     appSettings.log_severity = LOGSEVERITY_VERBOSE;
-    //appSettings.pack_loading_disabled = true;
-    //appSettings.pack_file_path = L".";
-    //appSettings.locales_dir_path = L".";
-
-    CefRefPtr<CefApp> app(new ChromeWindowApp);
 
     CefInitialize(main_args, appSettings, app);
 
-    //auto size = wnd->getSize();
-
-    const int WIDTH = 640;
-    const int HEIGHT = 480;
-
     CefWindowInfo info;
-    //info.SetAsChild(NULL, 0, 0, WIDTH, HEIGHT);
-
     CefRefPtr<ChromeWindowClient> client = new ChromeWindowClient;
 
     CefBrowserSettings settings;
@@ -123,7 +107,6 @@ int main(int argc, char** argv) {
 
     printf("CreateBrowser result: 0x08X\n", browser);
 
-    //frameListener = new ChromeFrameListener();
     CefRunMessageLoop();
     CefShutdown();
 

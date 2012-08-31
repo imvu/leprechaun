@@ -6,6 +6,8 @@ SRC = [
 
 env = Environment()
 
+OUTDIR = Dir('#/build')
+
 env.Append(
     CEF='/home/cit/src/chromium',
     CEFBIN='$CEF/src/out/Release/',
@@ -25,7 +27,8 @@ env.Append(
 
 env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
-program = env.Program('leprechaun', SRC)
-libcef = env.Install('#', '$CEFBIN/obj.target/cef/libcef.so')
+program = env.Program(OUTDIR.File('leprechaun'), SRC)
+libcef = env.Install(OUTDIR, '$CEFBIN/obj.target/cef/libcef.so')
+locales = env.Install(OUTDIR, '$CEF/src/out/Release/locales')
 
-env.Default([program, libcef])
+env.Default([program, libcef, locales])
