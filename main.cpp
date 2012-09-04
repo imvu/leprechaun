@@ -12,15 +12,10 @@
 
 struct ChromeWindowClient : public CefClient
                           , public CefLifeSpanHandler
-                          , public CefV8Handler
 {
     virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() {
         return this;
     }
-
-    /*virtual CefRefPtr<CefV8ContextHandler> GetV8ContextHandler() {
-        return this;
-        }*/
 
     // CefLifeSpanHandler
 
@@ -34,19 +29,33 @@ struct ChromeWindowClient : public CefClient
 
     CefRefPtr<CefBrowser> browser;
 
-    // CefV8ContextHandler
+    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
+};
+
+struct ChromeWindowApp : public CefApp
+                       , public CefRenderProcessHandler
+                       , public CefV8Handler
+{
+    IMPLEMENT_REFCOUNTING(ChromeWindowApp);
+
+    virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() {
+        return this;
+    }
+
+    // CefV8Handler
 
     virtual void OnContextCreated(
         CefRefPtr<CefBrowser> browser,
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
-        /*CefRefPtr<CefV8Value> f = CefV8Value::CreateFunction("call", this);
+        printf("oncontextcreated\n");
+        CefRefPtr<CefV8Value> f = CefV8Value::CreateFunction("call", this);
 
-        CefRefPtr<CefV8Value> imvu = CefV8Value::CreateObject(0, 0);
-        imvu->SetValue("call", f, V8_PROPERTY_ATTRIBUTE_READONLY);
+        CefRefPtr<CefV8Value> leprechaun = CefV8Value::CreateObject(0);
+        leprechaun->SetValue("call", f, V8_PROPERTY_ATTRIBUTE_READONLY);
 
-        context->GetGlobal()->SetValue("imvu", imvu, V8_PROPERTY_ATTRIBUTE_READONLY);*/
+        context->GetGlobal()->SetValue("leprechaun", leprechaun, V8_PROPERTY_ATTRIBUTE_READONLY);
     }
 
     virtual void OnContextReleased(
@@ -54,6 +63,9 @@ struct ChromeWindowClient : public CefClient
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
+    }
+
+    virtual void OnWebKitInitialized() {
     }
 
     // CefV8Handler
@@ -72,27 +84,15 @@ struct ChromeWindowClient : public CefClient
 
         return false;
     }
-
-
-    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
-};
-
-struct ChromeWindowApp : public CefApp {
-    IMPLEMENT_REFCOUNTING(ChromeWindowApp);
 };
 
 int main(int argc, char** argv) {
-    printf("Hello, world!\n");
-
-
-    CefMainArgs main_args(argc, argv);
-
     CefRefPtr<CefApp> app(new ChromeWindowApp);
 
+    CefMainArgs args(argc, argv);
     CefSettings appSettings;
     appSettings.log_severity = LOGSEVERITY_VERBOSE;
-
-    CefInitialize(main_args, appSettings, app);
+    CefInitialize(args, appSettings, app);
 
     CefWindowInfo info;
     CefRefPtr<ChromeWindowClient> client = new ChromeWindowClient;
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
     CefBrowser* browser = CefBrowserHost::CreateBrowserSync(
         info, client.get(),
-        "http://www.google.com",
+        "about:blank",
         settings
     );
 
