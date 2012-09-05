@@ -9,8 +9,7 @@ else
     CTAGS=sandbox-bin/ctags
 fi
 
-/usr/bin/find * \( \
-    -iname '*.fail.html' -o \
+(/usr/bin/find * \( \
     -false \
 \) -prune \
 -o \
@@ -21,7 +20,7 @@ fi
     -iname '*.html' -o \
     -iname '*.py' -o   \
     -false             \
-\) -print | $CTAGS -e -L- 2>&1 | grep -v "ignoring.null.tag"
+\) -print; /usr/bin/find ../chromium/src/cef -iname '*.cc' -o -iname '*.h') | $CTAGS -e -L- 2>&1 | grep -v "ignoring.null.tag"
 
 TAGS=`pwd`/TAGS
 echo "Updated $TAGS"
