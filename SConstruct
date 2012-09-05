@@ -15,6 +15,11 @@ env.Append(
     CPPPATH=[
         '$CEF/src/cef'
     ],
+
+    CPPFLAGS=[
+        '-O3'
+    ],
+
     LIBPATH=[
         '$CEFBIN/obj.target/cef'
     ],

@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include <cassert>
 #include "include/cef_base.h"
 #include "include/cef_client.h"
 
@@ -60,6 +61,32 @@ struct ChromeWindowApp : public CefApp
 
         CefRefPtr<CefV8Value> global = context->GetGlobal();
         global->SetValue("leprechaun", leprechaun, V8_PROPERTY_ATTRIBUTE_READONLY);
+
+        CefRefPtr<CefV8Value> bootstrapFunction;
+        CefRefPtr<CefV8Exception> bootstrapException;
+        bool evalResult = context->Eval(
+            CefString(
+                "(function leprechaun_bootstrap$(sourceCode) {"
+                "    var s = document.createElement(\"script\");"
+                "    var t = document.createTextNode(sourceCode + \"\\n//@sourceURL=thingie\");"
+                "    s.appendChild(t);"
+                "    document.body.appendChild(s);"
+                "})"
+            ), bootstrapFunction, bootstrapException
+        );
+
+        if (!evalResult) {
+            printf("Eval error: %ls\n", bootstrapException->GetMessage().c_str());
+
+            assert(evalResult);
+        }
+
+        CefString sourceCode = L"console.log(\"Hello!\"); leprechaun.exit();";
+
+        CefV8ValueList args;
+        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(sourceCode)));
+        CefRefPtr<CefV8Value> callResult = bootstrapFunction->ExecuteFunction(0, args);
+        printf("BWAR %08lx\n", reinterpret_cast<unsigned long>(callResult.get()));
     }
 
     virtual void OnContextReleased(
@@ -106,7 +133,7 @@ int main(int argc, char** argv) {
     gtk_init(&argc, &argv);
 
     GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(window), 80, 60);
+    gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
 
     g_signal_connect(G_OBJECT(window), "destroy",
                      G_CALLBACK(gtk_widget_destroyed), &window);
@@ -130,7 +157,7 @@ int main(int argc, char** argv) {
 
     CefBrowser* browser = CefBrowserHost::CreateBrowserSync(
         info, client.get(),
-        "file:///home/cit/src/leprechaun/test.html",
+        "data:text/html,<!DOCTYPE html><html><head></head><body></body><script>void 0;</script></html>",
         settings
     );
 
