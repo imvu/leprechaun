@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <cassert>
+#include <iostream>
 #include "include/cef_base.h"
 #include "include/cef_client.h"
 
@@ -42,6 +43,15 @@ struct ChromeWindowApp : public CefApp
 {
     IMPLEMENT_REFCOUNTING(ChromeWindowApp);
 
+private:
+    CefString bootstrapCode;
+public:
+
+    ChromeWindowApp(const CefString& bootstrapCode)
+        : bootstrapCode(bootstrapCode)
+    {
+    }
+
     // CefApp
 
     virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() {
@@ -81,10 +91,8 @@ struct ChromeWindowApp : public CefApp
             assert(evalResult);
         }
 
-        CefString sourceCode = L"console.log(\"Hello!\"); leprechaun.exit();";
-
         CefV8ValueList args;
-        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(sourceCode)));
+        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(bootstrapCode)));
         CefRefPtr<CefV8Value> callResult = bootstrapFunction->ExecuteFunction(0, args);
         printf("BWAR %08lx\n", reinterpret_cast<unsigned long>(callResult.get()));
     }
@@ -132,15 +140,35 @@ void destroy() {
 int main(int argc, char** argv) {
     gtk_init(&argc, &argv);
 
-    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
+    if (argc != 2) {
+        printf("Syntax: %s filename.js\n", argv[0]);
+        return 1;
+    }
 
-    g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(gtk_widget_destroyed), &window);
-    g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(destroy), NULL);
+    char* contents;
+    {
+        FILE* file = fopen(argv[1], "rb");
+        if (!file) {
+            printf("Unable to read %s\n", argv[1]);
+            return 1;
+        }
 
-    CefRefPtr<CefApp> app(new ChromeWindowApp);
+        fseek(file, 0, SEEK_END);
+        int len = ftell(file);
+        fseek(file, 0, SEEK_SET);
+
+        contents = new char[len + 1];
+        fread(contents, 1, len, file);
+        contents[len] = 0;
+
+        fclose(file);
+    }
+
+    CefString sourceCode(contents);
+    delete[] contents;
+    contents = 0;
+
+    CefRefPtr<CefApp> app(new ChromeWindowApp(sourceCode));
     CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient);
 
     CefMainArgs args(argc, argv);
@@ -149,6 +177,14 @@ int main(int argc, char** argv) {
     appSettings.multi_threaded_message_loop = false;
     appSettings.single_process = true;
     CefInitialize(args, appSettings, app);
+
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
+
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(gtk_widget_destroyed), &window);
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(destroy), NULL);
 
     CefWindowInfo info;
     info.SetAsChild(window);
