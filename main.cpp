@@ -17,7 +17,12 @@
 
 struct ChromeWindowClient : public CefClient
                           , public CefLifeSpanHandler
+                          , public CefDisplayHandler
 {
+    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() {
+        return this;
+    }
+
     virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() {
         return this;
     }
@@ -32,6 +37,18 @@ struct ChromeWindowClient : public CefClient
         browser = aBrowser;
     }
 
+    // CefDisplayHandler
+
+    virtual bool OnConsoleMessage(
+        CefRefPtr<CefBrowser> browser,
+        const CefString& message,
+        const CefString& source,
+        int line
+    ) {
+        printf("OnConsoleMessage %ls\n", message.c_str());
+        return false;
+    }
+
     CefRefPtr<CefBrowser> browser;
 
     IMPLEMENT_REFCOUNTING(ChromeWindowClient);
@@ -44,11 +61,11 @@ struct ChromeWindowApp : public CefApp
     IMPLEMENT_REFCOUNTING(ChromeWindowApp);
 
 private:
-    CefString bootstrapCode;
-public:
+    std::vector<std::string> argv;
 
-    ChromeWindowApp(const CefString& bootstrapCode)
-        : bootstrapCode(bootstrapCode)
+public:
+    ChromeWindowApp(const std::vector<std::string>& argv)
+        : argv(argv)
     {
     }
 
@@ -65,6 +82,32 @@ public:
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
+        char* contents;
+        {
+            FILE* file = fopen(argv.at(1).c_str(), "rb");
+            if (!file) {
+                printf("Unable to read %s\n", argv[1].c_str());
+                return;
+            }
+
+            fseek(file, 0, SEEK_END);
+            int len = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            contents = new char[len + 1];
+            fread(contents, 1, len, file);
+            contents[len] = 0;
+
+            fclose(file);
+        }
+
+        CefString sourceCode(contents);
+        delete[] contents;
+        contents = 0;
+
+        //
+
+
         CefRefPtr<CefV8Value> leprechaun = CefV8Value::CreateObject(0);
         CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
         leprechaun->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
@@ -92,9 +135,8 @@ public:
         }
 
         CefV8ValueList args;
-        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(bootstrapCode)));
+        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(sourceCode)));
         CefRefPtr<CefV8Value> callResult = bootstrapFunction->ExecuteFunction(0, args);
-        printf("BWAR %08lx\n", reinterpret_cast<unsigned long>(callResult.get()));
     }
 
     virtual void OnContextReleased(
@@ -140,35 +182,16 @@ void destroy() {
 int main(int argc, char** argv) {
     gtk_init(&argc, &argv);
 
-    if (argc != 2) {
+    if (argc > 1 && std::string(argv[1]) == "--type=zygote") {
+        // ok
+    } else if (argc == 2) {
+        // ok
+    } else {
         printf("Syntax: %s filename.js\n", argv[0]);
         return 1;
     }
 
-    char* contents;
-    {
-        FILE* file = fopen(argv[1], "rb");
-        if (!file) {
-            printf("Unable to read %s\n", argv[1]);
-            return 1;
-        }
-
-        fseek(file, 0, SEEK_END);
-        int len = ftell(file);
-        fseek(file, 0, SEEK_SET);
-
-        contents = new char[len + 1];
-        fread(contents, 1, len, file);
-        contents[len] = 0;
-
-        fclose(file);
-    }
-
-    CefString sourceCode(contents);
-    delete[] contents;
-    contents = 0;
-
-    CefRefPtr<CefApp> app(new ChromeWindowApp(sourceCode));
+    CefRefPtr<CefApp> app(new ChromeWindowApp(std::vector<std::string>(argv, argv + argc)));
     CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient);
 
     CefMainArgs args(argc, argv);
