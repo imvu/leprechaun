@@ -45,7 +45,8 @@ struct ChromeWindowClient : public CefClient
         const CefString& source,
         int line
     ) {
-        printf("OnConsoleMessage %ls\n", message.c_str());
+        printf("OnConsoleMessage %S\n", message.ToWString().c_str());
+
         return false;
     }
 
@@ -82,6 +83,10 @@ public:
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
+        if (argv[0] == "--type=zygote") {
+            return;
+        }
+
         char* contents;
         {
             FILE* file = fopen(argv.at(1).c_str(), "rb");
@@ -91,11 +96,17 @@ public:
             }
 
             fseek(file, 0, SEEK_END);
-            int len = ftell(file);
+            size_t len = ftell(file);
             fseek(file, 0, SEEK_SET);
 
             contents = new char[len + 1];
-            fread(contents, 1, len, file);
+            size_t readLen = fread(contents, 1, len, file);
+            if (len != readLen) {
+                printf("Failed to read %s\n", argv[1].c_str());
+                delete[] contents;
+                return;
+            }
+
             contents[len] = 0;
 
             fclose(file);
@@ -129,7 +140,7 @@ public:
         );
 
         if (!evalResult) {
-            printf("Eval error: %ls\n", bootstrapException->GetMessage().c_str());
+            printf("Eval error: %S\n", bootstrapException->GetMessage().ToWString().c_str());
 
             assert(evalResult);
         }
@@ -196,7 +207,7 @@ int main(int argc, char** argv) {
 
     CefMainArgs args(argc, argv);
     CefSettings appSettings;
-    appSettings.log_severity = LOGSEVERITY_VERBOSE;
+    //appSettings.log_severity = LOGSEVERITY_VERBOSE;
     appSettings.multi_threaded_message_loop = false;
     appSettings.single_process = true;
     CefInitialize(args, appSettings, app);
@@ -220,8 +231,8 @@ int main(int argc, char** argv) {
         settings
     );
 
-    printf("CreateBrowser result: 0x08X\n", browser);
-    gtk_widget_show_all(GTK_WIDGET(window));
+    //printf("CreateBrowser result: 0x08X\n", browser);
+    //gtk_widget_show_all(GTK_WIDGET(window));
 
     CefRunMessageLoop();
     CefShutdown();
