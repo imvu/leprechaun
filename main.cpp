@@ -55,6 +55,34 @@ struct ChromeWindowClient : public CefClient
     IMPLEMENT_REFCOUNTING(ChromeWindowClient);
 };
 
+std::string readFile(const std::string& fileName) {
+    FILE* file = fopen(fileName.c_str(), "rb");
+    if (!file) {
+        printf("Unable to read %s\n", fileName.c_str());
+        return std::string();
+    }
+
+    fseek(file, 0, SEEK_END);
+    const size_t len = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* const contents = new char[len + 1];
+    const size_t readLen = fread(contents, 1, len, file);
+    if (len != readLen) {
+        printf("Failed to read %s\n", fileName.c_str());
+        delete[] contents;
+        return std::string();
+    }
+
+    fclose(file);
+
+    contents[len] = 0;
+
+    std::string s(contents);
+    delete[] contents;
+    return s;
+}
+
 struct ChromeWindowApp : public CefApp
                        , public CefRenderProcessHandler
                        , public CefV8Handler
@@ -62,11 +90,11 @@ struct ChromeWindowApp : public CefApp
     IMPLEMENT_REFCOUNTING(ChromeWindowApp);
 
 private:
-    std::vector<std::string> argv;
+    CefRefPtr<CefCommandLine> commandLine;
 
 public:
-    ChromeWindowApp(const std::vector<std::string>& argv)
-        : argv(argv)
+    ChromeWindowApp(CefRefPtr<CefCommandLine>& commandLine)
+        : commandLine(commandLine)
     {
     }
 
@@ -83,41 +111,19 @@ public:
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
-        if (argv[0] == "--type=zygote") {
+        if (!commandLine->HasArguments()) {
             return;
         }
 
-        char* contents;
-        {
-            FILE* file = fopen(argv.at(1).c_str(), "rb");
-            if (!file) {
-                printf("Unable to read %s\n", argv[1].c_str());
-                return;
-            }
+        CefCommandLine::ArgumentList arguments;
+        commandLine->GetArguments(arguments);
 
-            fseek(file, 0, SEEK_END);
-            size_t len = ftell(file);
-            fseek(file, 0, SEEK_SET);
-
-            contents = new char[len + 1];
-            size_t readLen = fread(contents, 1, len, file);
-            if (len != readLen) {
-                printf("Failed to read %s\n", argv[1].c_str());
-                delete[] contents;
-                return;
-            }
-
-            contents[len] = 0;
-
-            fclose(file);
+        std::string sourceCode = readFile(arguments.at(0));
+        if (sourceCode.empty()) {
+            return;
         }
 
-        CefString sourceCode(contents);
-        delete[] contents;
-        contents = 0;
-
         //
-
 
         CefRefPtr<CefV8Value> leprechaun = CefV8Value::CreateObject(0);
         CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
@@ -193,16 +199,20 @@ void destroy() {
 int main(int argc, char** argv) {
     gtk_init(&argc, &argv);
 
-    if (argc > 1 && std::string(argv[1]) == "--type=zygote") {
-        // ok
-    } else if (argc == 2) {
-        // ok
-    } else {
+    CefRefPtr<CefCommandLine> commandLine(CefCommandLine::CreateCommandLine());
+    commandLine->InitFromArgv(argc, argv);
+
+    printf("Commandline %S\n", commandLine->GetCommandLineString().ToWString().c_str());
+
+    // FIXME: Chromium launches a zygote, even though we're in single-process mode.
+    // It's not clear to me what this accomplishes, but for now, we just roll with it.
+    // -- andy 7 September 2012
+    if (!commandLine->HasSwitch("type") && argc != 2) {
         printf("Syntax: %s filename.js\n", argv[0]);
         return 1;
     }
 
-    CefRefPtr<CefApp> app(new ChromeWindowApp(std::vector<std::string>(argv, argv + argc)));
+    CefRefPtr<CefApp> app(new ChromeWindowApp(commandLine));
     CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient);
 
     CefMainArgs args(argc, argv);
@@ -231,8 +241,7 @@ int main(int argc, char** argv) {
         settings
     );
 
-    //printf("CreateBrowser result: 0x08X\n", browser);
-    //gtk_widget_show_all(GTK_WIDGET(window));
+    gtk_widget_show_all(GTK_WIDGET(window));
 
     CefRunMessageLoop();
     CefShutdown();
