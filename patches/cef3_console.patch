@@ -1,0 +1,43 @@
+Index: cef3/libcef/browser/browser_host_impl.h
+===================================================================
+--- cef3/libcef/browser/browser_host_impl.h	(revision 769)
++++ cef3/libcef/browser/browser_host_impl.h	(working copy)
+@@ -240,6 +240,11 @@
+       content::WebContents* web_contents,
+       const content::MediaStreamRequest* request,
+       const content::MediaResponseCallback& callback) OVERRIDE;
++  virtual bool AddMessageToConsole(content::WebContents* source,
++                                   int32 level,
++                                   const string16& message,
++                                   int32 line_no,
++                                   const string16& source_id) OVERRIDE;
+ 
+   // content::WebContentsObserver methods.
+   virtual void RenderViewCreated(
+Index: cef3/libcef/browser/browser_host_impl.cc
+===================================================================
+--- cef3/libcef/browser/browser_host_impl.cc	(revision 769)
++++ cef3/libcef/browser/browser_host_impl.cc	(working copy)
+@@ -1125,7 +1125,22 @@
+   callback.Run(devices);
+ }
+ 
++bool CefBrowserHostImpl::AddMessageToConsole(
++    content::WebContents* source,
++    int32 level,
++    const string16& message,
++    int32 line_no,
++    const string16& source_id) {
++  if (client_.get()) {
++    CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
++    if (handler.get()) {
++      return handler->OnConsoleMessage(this, message, source_id, line_no);
++    }
++  }
++  return false;
++};
+ 
++
+ // content::WebContentsObserver methods.
+ // -----------------------------------------------------------------------------
+ 
