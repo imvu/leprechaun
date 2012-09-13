@@ -135,6 +135,11 @@ public:
         CefRefPtr<CefV8Value> echo = CefV8Value::CreateFunction("echo", this);
         this->leprechaunObj->SetValue("echo", echo, V8_PROPERTY_ATTRIBUTE_READONLY);
 
+        CefRefPtr<CefV8Value> onConsoleMessage = CefV8Value::CreateFunction("onConsoleMessage", this);
+        this->leprechaunObj->SetValue("onConsoleMessage", onConsoleMessage, V8_PROPERTY_ATTRIBUTE_NONE);
+        CefRefPtr<CefV8Value> onError = CefV8Value::CreateFunction("onError", this);
+        this->leprechaunObj->SetValue("onError", onError, V8_PROPERTY_ATTRIBUTE_NONE);
+
         global->SetValue("leprechaun", this->leprechaunObj, V8_PROPERTY_ATTRIBUTE_READONLY);
         this->firstBrowser = browser;
 
@@ -164,9 +169,7 @@ public:
         CefString& exception
     ) {
         if (name == "exit") {
-            printf("Exiting!\n");
-            // FIXME: This breaks if we run chromium in multiprocess mode.
-            // I can't figure out how to get the IPC right. -- andy 5 September 2012
+            printf("Exiting with value %d!\n", arguments[0]->GetIntValue());
             this->firstBrowser = NULL;
             bool result = CefPostTask(
                 TID_UI,
@@ -182,13 +185,9 @@ public:
                 ss << arguments[i]->GetStringValue().ToWString();
             }
             printf("Transfering log: %S\n", ss.str().c_str());
-            std::wstring command(L"onConsoleMessage('");
-            command += ss.str().c_str();
-            command += L"');";
-            CefString cefCommand;
-            cefCommand.FromWString(command);
-            this->firstBrowser->GetMainFrame()->ExecuteJavaScript(cefCommand,
-                this->firstBrowser->GetMainFrame()->GetURL(), 0);
+
+            CefRefPtr<CefV8Value> onConsoleMessageFunc = this->leprechaunObj->GetValue("onConsoleMessage");
+            onConsoleMessageFunc->ExecuteFunction(this->leprechaunObj, arguments);
             return true;
         } else if (name == "echo") {
             std::wstringstream ss;

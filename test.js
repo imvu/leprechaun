@@ -5,7 +5,7 @@ w.onload = function() {
     console.log("frame loaded");
 };
 
-function onConsoleMessage(msg) {
+leprechaun.onConsoleMessage = function onConsoleMessage(msg) {
     var passed, total, failed, endTime, diffTime;
 
     if (msg.indexOf('!!DONE!! ') === 0) {
