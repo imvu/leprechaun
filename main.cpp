@@ -1,8 +1,10 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <cassert>
-#include <iostream>
+#include <fstream>
+#include <sstream>
 #include "include/cef_base.h"
 #include "include/cef_client.h"
 
@@ -15,10 +17,32 @@
 #include "include/cef_v8.h"
 #include "include/cef_app.h"
 
+std::string readFile(const std::string& fileName) {
+    return std::string(
+        std::istreambuf_iterator<char>(std::ifstream(fileName.c_str()).rdbuf()),
+        std::istreambuf_iterator<char>());
+}
+
+void bootstrap(CefRefPtr<CefFrame>& frame, const std::string& fileName) {
+    std::string sourceCode = readFile(fileName);
+    if (sourceCode.empty()) {
+        return;
+    }
+
+    frame->ExecuteJavaScript(sourceCode, fileName, 0);
+}
+
 struct ChromeWindowClient : public CefClient
                           , public CefLifeSpanHandler
                           , public CefDisplayHandler
 {
+private:
+    CefRefPtr<CefCommandLine> commandLine;
+public:
+    ChromeWindowClient(CefRefPtr<CefCommandLine>& commandLine)
+        : commandLine(commandLine)
+        { }
+
     virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() {
         return this;
     }
@@ -35,6 +59,16 @@ struct ChromeWindowClient : public CefClient
         }
 
         browser = aBrowser;
+
+        printf("onAfterCreated\n");
+        if (!commandLine->HasArguments()) {
+            return;
+        }
+
+        CefCommandLine::ArgumentList arguments;
+        commandLine->GetArguments(arguments);
+
+        //
     }
 
     // CefDisplayHandler
@@ -55,48 +89,20 @@ struct ChromeWindowClient : public CefClient
     IMPLEMENT_REFCOUNTING(ChromeWindowClient);
 };
 
-std::string readFile(const std::string& fileName) {
-    FILE* file = fopen(fileName.c_str(), "rb");
-    if (!file) {
-        printf("Unable to read %s\n", fileName.c_str());
-        return std::string();
-    }
-
-    fseek(file, 0, SEEK_END);
-    const size_t len = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char* const contents = new char[len + 1];
-    const size_t readLen = fread(contents, 1, len, file);
-    if (len != readLen) {
-        printf("Failed to read %s\n", fileName.c_str());
-        delete[] contents;
-        return std::string();
-    }
-
-    fclose(file);
-
-    contents[len] = 0;
-
-    std::string s(contents);
-    delete[] contents;
-    return s;
-}
-
 struct ChromeWindowApp : public CefApp
                        , public CefRenderProcessHandler
                        , public CefV8Handler
 {
     IMPLEMENT_REFCOUNTING(ChromeWindowApp);
+    CefRefPtr<CefBrowser> firstBrowser;
+    CefRefPtr<CefV8Value> leprechaunObj;
 
 private:
     CefRefPtr<CefCommandLine> commandLine;
-
 public:
     ChromeWindowApp(CefRefPtr<CefCommandLine>& commandLine)
         : commandLine(commandLine)
-    {
-    }
+    { }
 
     // CefApp
 
@@ -111,49 +117,31 @@ public:
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     ) {
-        if (!commandLine->HasArguments()) {
+        printf("OnContextCreated '%S'\n", frame->GetURL().ToWString().c_str());
+
+        CefRefPtr<CefV8Value> global = context->GetGlobal();
+        if (this->firstBrowser != NULL) {
+            printf("Second context; using secondary console logger\n");
+            CefRefPtr<CefV8Value> console = CefV8Value::CreateObject(0);
+            CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
+            console->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
+            global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_READONLY);
             return;
         }
+        printf("Primary context; using leprechaun object\n");
+        this->leprechaunObj = CefV8Value::CreateObject(0);
+        CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
+        this->leprechaunObj->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
+        CefRefPtr<CefV8Value> echo = CefV8Value::CreateFunction("echo", this);
+        this->leprechaunObj->SetValue("echo", echo, V8_PROPERTY_ATTRIBUTE_READONLY);
+
+        global->SetValue("leprechaun", this->leprechaunObj, V8_PROPERTY_ATTRIBUTE_READONLY);
+        this->firstBrowser = browser;
 
         CefCommandLine::ArgumentList arguments;
         commandLine->GetArguments(arguments);
 
-        std::string sourceCode = readFile(arguments.at(0));
-        if (sourceCode.empty()) {
-            return;
-        }
-
-        //
-
-        CefRefPtr<CefV8Value> leprechaun = CefV8Value::CreateObject(0);
-        CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
-        leprechaun->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
-
-        CefRefPtr<CefV8Value> global = context->GetGlobal();
-        global->SetValue("leprechaun", leprechaun, V8_PROPERTY_ATTRIBUTE_READONLY);
-
-        CefRefPtr<CefV8Value> bootstrapFunction;
-        CefRefPtr<CefV8Exception> bootstrapException;
-        bool evalResult = context->Eval(
-            CefString(
-                "(function leprechaun_bootstrap$(sourceCode) {"
-                "    var s = document.createElement(\"script\");"
-                "    var t = document.createTextNode(sourceCode + \"\\n//@sourceURL=thingie\");"
-                "    s.appendChild(t);"
-                "    document.body.appendChild(s);"
-                "})"
-            ), bootstrapFunction, bootstrapException
-        );
-
-        if (!evalResult) {
-            printf("Eval error: %S\n", bootstrapException->GetMessage().ToWString().c_str());
-
-            assert(evalResult);
-        }
-
-        CefV8ValueList args;
-        args.push_back(CefRefPtr<CefV8Value>(CefV8Value::CreateString(sourceCode)));
-        CefRefPtr<CefV8Value> callResult = bootstrapFunction->ExecuteFunction(0, args);
+        bootstrap(frame, arguments.at(0));
     }
 
     virtual void OnContextReleased(
@@ -176,15 +164,38 @@ public:
         CefString& exception
     ) {
         if (name == "exit") {
+            printf("Exiting!\n");
             // FIXME: This breaks if we run chromium in multiprocess mode.
             // I can't figure out how to get the IPC right. -- andy 5 September 2012
+            this->firstBrowser = NULL;
             bool result = CefPostTask(
                 TID_UI,
-                NewCefRunnableFunction(&CefQuitMessageLoop)
+                NewCefRunnableFunction(&exit, arguments[0]->GetIntValue())
             );
+            return true;
 
-            retval = CefV8Value::CreateString(result ? L"OK" : L"NOT OK");
+        } else if (name == "open") {
 
+        } else if (name == "log") {
+            std::wstringstream ss;
+            for (size_t i = 0; i < arguments.size(); ++i) {
+                ss << arguments[i]->GetStringValue().ToWString();
+            }
+            printf("Transfering log: %S\n", ss.str().c_str());
+            std::wstring command(L"onConsoleMessage('");
+            command += ss.str().c_str();
+            command += L"');";
+            CefString cefCommand;
+            cefCommand.FromWString(command);
+            this->firstBrowser->GetMainFrame()->ExecuteJavaScript(cefCommand,
+                this->firstBrowser->GetMainFrame()->GetURL(), 0);
+            return true;
+        } else if (name == "echo") {
+            std::wstringstream ss;
+            for (size_t i = 0; i < arguments.size(); ++i) {
+                ss << arguments[i]->GetStringValue().ToWString();
+            }
+            printf("ECHO!                   %S\n", ss.str().c_str());
             return true;
         }
 
@@ -192,11 +203,9 @@ public:
     }
 };
 
-void destroy() {
-    CefQuitMessageLoop();
-}
-
 int main(int argc, char** argv) {
+    setlocale(LC_ALL, "");
+
     gtk_init(&argc, &argv);
 
     CefRefPtr<CefCommandLine> commandLine(CefCommandLine::CreateCommandLine());
@@ -213,7 +222,7 @@ int main(int argc, char** argv) {
     }
 
     CefRefPtr<CefApp> app(new ChromeWindowApp(commandLine));
-    CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient);
+    CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient(commandLine));
 
     CefMainArgs args(argc, argv);
     CefSettings appSettings;
@@ -228,7 +237,7 @@ int main(int argc, char** argv) {
     g_signal_connect(G_OBJECT(window), "destroy",
                      G_CALLBACK(gtk_widget_destroyed), &window);
     g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(destroy), NULL);
+                     G_CALLBACK(CefQuitMessageLoop), NULL);
 
     CefWindowInfo info;
     info.SetAsChild(window);
