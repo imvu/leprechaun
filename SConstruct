@@ -11,13 +11,15 @@ OUTDIR = Dir('#/build')
 env.Append(
     CEF='/home/cit/src/chromium',
     CEFBIN='$CEF/src/out/Release/',
+    #CEFBIN='$CEF/src/out/Debug/',
 
     CPPPATH=[
         '$CEF/src/cef'
     ],
 
     CPPFLAGS=[
-        '-O3'
+        '-O3',
+        '-g'
     ],
 
     LIBPATH=[
