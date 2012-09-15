@@ -55,6 +55,8 @@ req.onload = function() {
             //console.log("checking console message: " + data.params.message.text.substr(0, 8));
             if (data.params.message.text.substr(0, 8) === 'Uncaught') {
                 leprechaun.onError(data.params.message.text, data.params.message.stackTrace);
+            } else {
+                leprechaun.onConsoleMessage(data.params.message.text);
             }
             return;
         } else if (data.method === 'Console.messagesCleared') {

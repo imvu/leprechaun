@@ -126,11 +126,13 @@ public:
             //    printf("Skipping reconnecting to initial browser\n");
             //    return;
             //}
+            /*
             printf("Second context; creating log function to allow redirect of logs\n");
             CefRefPtr<CefV8Value> console = CefV8Value::CreateObject(0);
             CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
             console->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
             global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_READONLY);
+            */
 
             // have first window debugger connect to the new browser
             this->firstBrowser->GetMainFrame()->ExecuteJavaScript("onNewBrowser();", "NewBrowser.js", 0);
@@ -257,7 +259,7 @@ int main(int argc, char** argv) {
     CefSettings appSettings;
     appSettings.remote_debugging_port = 24042;
     //appSettings.log_severity = LOGSEVERITY_VERBOSE;
-    appSettings.multi_threaded_message_loop = false;
+    //appSettings.multi_threaded_message_loop = false;
     appSettings.single_process = true;
     CefInitialize(args, appSettings, app);
 
