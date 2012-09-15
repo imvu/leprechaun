@@ -63,6 +63,7 @@ req.onload = function() {
             return;
         } else if (-1 !== consoleEnabledCommands.indexOf(data.id)) {
             w.location= 'http://localhost.imvu.com/jstest/?headless=1&script=' + window.encodeURIComponent(leprechaun.args[1]);
+            startTime = new Date();
             return;
         /*
         } else if (-1 !== debuggerEnabledCommands.indexOf(data.id)) {
