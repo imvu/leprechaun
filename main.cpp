@@ -36,6 +36,8 @@ struct ChromeWindowClient : public CefClient
                           , public CefLifeSpanHandler
                           , public CefDisplayHandler
 {
+    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
+
 private:
     CefRefPtr<CefCommandLine> commandLine;
 public:
@@ -52,6 +54,8 @@ public:
     }
 
     // CefLifeSpanHandler
+
+    CefRefPtr<CefBrowser> browser;
 
     virtual void OnAfterCreated(CefRefPtr<CefBrowser> aBrowser) {
         if (browser.get()) {
@@ -83,10 +87,6 @@ public:
 
         return false;
     }
-
-    CefRefPtr<CefBrowser> browser;
-
-    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
 };
 
 struct ChromeWindowApp : public CefApp
@@ -120,31 +120,53 @@ public:
         printf("OnContextCreated '%S'\n", frame->GetURL().ToWString().c_str());
 
         CefRefPtr<CefV8Value> global = context->GetGlobal();
+
         if (this->firstBrowser != NULL) {
-            printf("Second context; using secondary console logger\n");
+            //if (this->firstBrowser.get() != browser.get()) {
+            //    printf("Skipping reconnecting to initial browser\n");
+            //    return;
+            //}
+            printf("Second context; creating log function to allow redirect of logs\n");
             CefRefPtr<CefV8Value> console = CefV8Value::CreateObject(0);
             CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
             console->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
             global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_READONLY);
+
+            // have first window debugger connect to the new browser
+            this->firstBrowser->GetMainFrame()->ExecuteJavaScript("onNewBrowser();", "NewBrowser.js", 0);
             return;
         }
         printf("Primary context; using leprechaun object\n");
+        this->firstBrowser = browser;
+
+        CefCommandLine::ArgumentList arguments;
+        commandLine->GetArguments(arguments);
+
         this->leprechaunObj = CefV8Value::CreateObject(0);
         CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
         this->leprechaunObj->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
         CefRefPtr<CefV8Value> echo = CefV8Value::CreateFunction("echo", this);
         this->leprechaunObj->SetValue("echo", echo, V8_PROPERTY_ATTRIBUTE_READONLY);
+        CefRefPtr<CefV8Value> open = CefV8Value::CreateFunction("open", this);
+        this->leprechaunObj->SetValue("open", open, V8_PROPERTY_ATTRIBUTE_READONLY);
+        CefRefPtr<CefV8Value> args = CefV8Value::CreateArray(arguments.size());
+        for (int i; i < arguments.size(); ++i) {
+            args->SetValue(i, CefV8Value::CreateString(arguments.at(i)));
+        }
+        this->leprechaunObj->SetValue("args", args, V8_PROPERTY_ATTRIBUTE_READONLY);
 
         CefRefPtr<CefV8Value> onConsoleMessage = CefV8Value::CreateFunction("onConsoleMessage", this);
         this->leprechaunObj->SetValue("onConsoleMessage", onConsoleMessage, V8_PROPERTY_ATTRIBUTE_NONE);
         CefRefPtr<CefV8Value> onError = CefV8Value::CreateFunction("onError", this);
         this->leprechaunObj->SetValue("onError", onError, V8_PROPERTY_ATTRIBUTE_NONE);
+        CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
+        this->leprechaunObj->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
 
         global->SetValue("leprechaun", this->leprechaunObj, V8_PROPERTY_ATTRIBUTE_READONLY);
-        this->firstBrowser = browser;
 
-        CefCommandLine::ArgumentList arguments;
-        commandLine->GetArguments(arguments);
+        // Launch a websocket that will connect to the remote debugger to transfer back stack traces
+        //std::string exceptionJs = readFile("../error.js");
+        //frame->ExecuteJavaScript(exceptionJs.c_str(), "EnableStackTraces.js", 0);
 
         bootstrap(frame, arguments.at(0));
     }
@@ -171,6 +193,7 @@ public:
         if (name == "exit") {
             printf("Exiting with value %d!\n", arguments[0]->GetIntValue());
             this->firstBrowser = NULL;
+            // see http://www.magpcss.org/ceforum/viewtopic.php?f=6&t=891 for the 'right' way to do this
             bool result = CefPostTask(
                 TID_UI,
                 NewCefRunnableFunction(&exit, arguments[0]->GetIntValue())
@@ -180,13 +203,16 @@ public:
         } else if (name == "open") {
 
         } else if (name == "log") {
+            if (object->IsSame(this->leprechaunObj)) {
+                // Figure out if we need this some day...
+                return true;
+            }
             std::wstringstream ss;
             for (size_t i = 0; i < arguments.size(); ++i) {
                 ss << arguments[i]->GetStringValue().ToWString();
             }
-            printf("Transfering log: %S\n", ss.str().c_str());
-
             CefRefPtr<CefV8Value> onConsoleMessageFunc = this->leprechaunObj->GetValue("onConsoleMessage");
+            // Right now we're passing the original arguments; should we be passing the single string instead?
             onConsoleMessageFunc->ExecuteFunction(this->leprechaunObj, arguments);
             return true;
         } else if (name == "echo") {
@@ -194,7 +220,11 @@ public:
             for (size_t i = 0; i < arguments.size(); ++i) {
                 ss << arguments[i]->GetStringValue().ToWString();
             }
-            printf("ECHO!                   %S\n", ss.str().c_str());
+            printf("%S\n", ss.str().c_str());
+            return true;
+        } else if (name == "onerror") {
+            //CefRefPtr<CefV8Value> onErrorFunc = this->leprechaunObj->GetValue("onError");
+            //onErrorFunc->ExecuteFunction();
             return true;
         }
 
@@ -215,7 +245,7 @@ int main(int argc, char** argv) {
     // FIXME: Chromium launches a zygote, even though we're in single-process mode.
     // It's not clear to me what this accomplishes, but for now, we just roll with it.
     // -- andy 7 September 2012
-    if (!commandLine->HasSwitch("type") && argc != 2) {
+    if (!commandLine->HasSwitch("type") && argc < 2) {
         printf("Syntax: %s filename.js\n", argv[0]);
         return 1;
     }
@@ -225,6 +255,7 @@ int main(int argc, char** argv) {
 
     CefMainArgs args(argc, argv);
     CefSettings appSettings;
+    appSettings.remote_debugging_port = 24042;
     //appSettings.log_severity = LOGSEVERITY_VERBOSE;
     appSettings.multi_threaded_message_loop = false;
     appSettings.single_process = true;
@@ -242,6 +273,7 @@ int main(int argc, char** argv) {
     info.SetAsChild(window);
 
     CefBrowserSettings settings;
+    settings.web_security_disabled = true;
 
     CefBrowser* browser = CefBrowserHost::CreateBrowserSync(
         info, client.get(),
