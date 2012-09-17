@@ -130,7 +130,12 @@ public:
             printf("Second context; creating log function to allow redirect of logs\n");
             CefRefPtr<CefV8Value> console = CefV8Value::CreateObject(0);
             CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
+            CefRefPtr<CefV8Value> nop = CefV8Value::CreateFunction("nop", this);
+
             console->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
+            console->SetValue("error", log, V8_PROPERTY_ATTRIBUTE_READONLY);
+            console->SetValue("groupCollapsed", nop, V8_PROPERTY_ATTRIBUTE_READONLY);
+            console->SetValue("groupEnd", nop, V8_PROPERTY_ATTRIBUTE_READONLY);
             global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_READONLY);
             */
 
@@ -203,6 +208,9 @@ public:
             return true;
 
         } else if (name == "open") {
+
+        } else if (name == "nop") {
+            return true;
 
         } else if (name == "log") {
             if (object->IsSame(this->leprechaunObj)) {
