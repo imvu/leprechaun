@@ -3,9 +3,10 @@ var commandIndex = 0;
 var debuggerEnabledCommands = [];
 var debuggerSetPauseableCommands = [];
 var consoleEnabledCommands = [];
+var webSocketConnections = [];
 if (leprechaun.args.length !== 2) {
-    console.log('Usage: run-jstest.js URL');
-    console.log('got: ' + leprechaun.args.toString());
+    leprechaun.echo('Usage: run-jstest.js URL');
+    leprechaun.echo('got: ' + leprechaun.args.toString());
     leprechaun.exit(1);
 }
 function onNewBrowser(url) {
@@ -15,8 +16,8 @@ function onNewBrowser(url) {
 //console.log('building request using url ' + url);
 var req = new XMLHttpRequest();
 req.open('GET', 'http://localhost:24042/json', true);
-req.onerror = function(err) {console.log(err);}; 
-req.onabort = function(err) {console.log(err);};
+req.onerror = function(err) {leprechaun.echo(err);}; 
+req.onabort = function(err) {leprechaun.echo(err);};
 req.onload = function() {
     //console.log('got response' + req.responseText);
     var response = JSON.parse(req.responseText);
@@ -32,8 +33,9 @@ req.onload = function() {
             continue;
         }
     var websocket = new WebSocket(response[i].webSocketDebuggerUrl);
-    websocket.onerror = function(e) {console.log('got websocket error ' + e.toString());};
-    websocket.onclose = function() {console.log('got websocket close');};
+    webSocketConnections.push(websocket);
+    websocket.onerror = function(e) {leprechaun.echo('got websocket error ' + e.toString());};
+    websocket.onclose = function() {leprechaun.echo('got websocket close');};
     websocket.onopen = function(evt) {
         //console.log('WebSocket open worked');
         //debuggerEnabledCommands.push(commandIndex);
@@ -64,8 +66,15 @@ req.onload = function() {
         } else if (data.method === 'Debugger.scriptParsed') {
             return;
         } else if (-1 !== consoleEnabledCommands.indexOf(data.id)) {
+            //websocket.send(JSON.stringify({id:commandIndex++, method:'Network.enable'}));
+            //websocket.send(JSON.stringify({id:commandIndex++, method:'Timeline.start', params:{'maxCallStackDepth':10}}));
             w.location= 'http://localhost.imvu.com/jstest/?headless=1&script=' + window.encodeURIComponent(leprechaun.args[1]);
             startTime = new Date();
+            window.setTimeout(function () {
+                leprechaun.echo('Your unit test took longer than 15 seconds to complete.' +
+                    ' It\'s possible that this test either is absurdly slow, '+
+                    'attempted to access the network, or was unable to load a dependency.');
+            }, 1500);
             return;
         /*
         } else if (-1 !== debuggerEnabledCommands.indexOf(data.id)) {
@@ -84,7 +93,7 @@ req.onload = function() {
             return;
         */
         }
-        console.log('Unknown event:' + event.data);
+        leprechaun.echo('Unknown event:' + event.data);
     }
     }
 }
@@ -124,7 +133,3 @@ leprechaun.onError = function onError(msg, trace) {
     leprechaun.exit(1);
 }
 
-window.setTimeout(function () {
-    console.log('Your unit test took longer than 15 seconds to complete. It\'s possible that this test either is absurdly slow, attempted to access the network, or was unable to load a dependency.');
-    leprechaun.exit(1);
-}, 15000);
