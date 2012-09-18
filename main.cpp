@@ -139,6 +139,11 @@ public:
             global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_READONLY);
             */
 
+            // Disallow window.open
+
+            CefRefPtr<CefV8Value> openWindow = CefV8Value::CreateFunction("openWindow", this);
+            global->SetValue("open", openWindow, V8_PROPERTY_ATTRIBUTE_READONLY);
+
             // have first window debugger connect to the new browser
             this->firstBrowser->GetMainFrame()->ExecuteJavaScript("onNewBrowser();", "NewBrowser.js", 0);
             return;
@@ -209,6 +214,14 @@ public:
 
         } else if (name == "open") {
 
+        } else if (name == "openWindow") {
+            void noOpenWindow();
+            CefPostTask(
+                TID_UI,
+                NewCefRunnableFunction(&noOpenWindow)
+            );
+            return true;
+
         } else if (name == "nop") {
             return true;
 
@@ -241,6 +254,11 @@ public:
         return false;
     }
 };
+
+void noOpenWindow() {
+    printf("Test tried to window.open!  This is bad!\n");
+    exit(1);
+}
 
 int main(int argc, char** argv) {
     setlocale(LC_ALL, "");
@@ -291,7 +309,7 @@ int main(int argc, char** argv) {
         settings
     );
 
-    gtk_widget_show_all(GTK_WIDGET(window));
+    //gtk_widget_show_all(GTK_WIDGET(window));
 
     CefRunMessageLoop();
     CefShutdown();
