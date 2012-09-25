@@ -1,7 +1,5 @@
 var startTime = null;
 var commandIndex = 0;
-var debuggerEnabledCommands = [];
-var debuggerSetPauseableCommands = [];
 var consoleEnabledCommands = [];
 var webSocketConnections = [];
 if (leprechaun.args.length !== 2) {
@@ -40,10 +38,7 @@ function onNewBrowser(url) {
             };
             websocket.onmessage = function(event) {
                 var data = JSON.parse(event.data);
-                if (data.method === 'Debugger.paused') {
-                    leprechaun.onError(event.params.reason, event.params.callFrames);
-                    return;
-                } else if (data.method === 'Console.messageAdded') {
+                if (data.method === 'Console.messageAdded') {
                     if (data.params.message.text.substr(0, 8) === 'Uncaught') {
                         leprechaun.onError(data.params.message.text, data.params.message.stackTrace);
                     } else {
@@ -58,10 +53,11 @@ function onNewBrowser(url) {
                     w.location= 'http://localhost.imvu.com/jstest/?headless=1&script=' + window.encodeURIComponent(leprechaun.args[1]);
                     startTime = new Date();
                     window.setTimeout(function () {
-                        leprechaun.echo('Your unit test took longer than 15 seconds to complete.' +
+                        leprechaun.echo('Your unit test took longer than 30 seconds to complete.' +
                                         ' It\'s possible that this test either is absurdly slow, '+
                                         'attempted to access the network, or was unable to load a dependency.');
-                    }, 1500);
+                        leprechaun.exit(1);
+                    }, 30000);
                     return;
                 }
                 leprechaun.echo('Unknown event:' + event.data);
@@ -103,3 +99,8 @@ leprechaun.onError = function onError(msg, trace) {
     leprechaun.exit(1);
 };
 
+window.setTimeout(function () {
+    leprechaun.echo('Leprechaun took longer than 45s to start.  There is probably a problem in run_jstest.js' +
+                    ' or your system configuration.');
+    leprechaun.exit(1);
+}, 45000);
