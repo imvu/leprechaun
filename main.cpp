@@ -1,13 +1,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <gtk/gtk.h>
 #include <cassert>
 #include <fstream>
 #include <sstream>
+
+#include "main.h"
 #include "include/cef_base.h"
 #include "include/cef_client.h"
-
 
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
@@ -34,46 +34,33 @@ void bootstrap(const CefRefPtr<CefFrame>& frame, const std::string& fileName) {
     frame->ExecuteJavaScript(sourceCode, fileName, 0);
 }
 
-struct ChromeWindowClient : public CefClient
-                          , public CefLifeSpanHandler
-                          , public CefDisplayHandler
-                          , public CefRequestHandler
-{
-    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
+ChromeWindowClient::ChromeWindowClient() {
+}
 
-public:
-    ChromeWindowClient()
-        { }
+ChromeWindowClient::~ChromeWindowClient() {
+    printf("Shutting down client\n");
+}
 
-    ~ChromeWindowClient() {printf("Shutting down client\n");}
+CefRefPtr<CefDisplayHandler> ChromeWindowClient::GetDisplayHandler() {
+    return this;
+}
 
-    // CefClient
+CefRefPtr<CefLifeSpanHandler> ChromeWindowClient::GetLifeSpanHandler() {
+    return this;
+}
 
-    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() {
-        return this;
+void ChromeWindowClient::OnAfterCreated(CefRefPtr<CefBrowser> aBrowser) {
+    if (browser.get()) {
+        return;
     }
 
-    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() {
-        return this;
-    }
+    browser = aBrowser;
+}
 
-    // CefLifeSpanHandler
-
-    CefRefPtr<CefBrowser> browser;
-
-    virtual void OnAfterCreated(CefRefPtr<CefBrowser> aBrowser) {
-        if (browser.get()) {
-            return;
-        }
-
-        browser = aBrowser;
-    }
-
-    // CefRequestHandler
-    virtual bool OnProcessMessageReceived(
-        CefRefPtr<CefBrowser> browser,
-        CefProcessId source_process,
-        CefRefPtr<CefProcessMessage> message
+bool ChromeWindowClient::OnProcessMessageReceived(
+    CefRefPtr<CefBrowser> browser,
+    CefProcessId source_process,
+    CefRefPtr<CefProcessMessage> message
     ) {
         if (message->GetName() == "getArguments") {
             CefRefPtr<CefProcessMessage> outMessage = CefProcessMessage::Create("arguments");
@@ -99,33 +86,18 @@ public:
         }
         return false;
     }
-};
 
-struct ChromeWindowApp : public CefApp
-                       , public CefRenderProcessHandler
-                       , public CefV8Handler
-{
-    IMPLEMENT_REFCOUNTING(ChromeWindowApp);
-    CefRefPtr<CefBrowser> firstBrowser;
-    CefRefPtr<CefV8Value> leprechaunObj;
-    std::wstring outBuffer;
+ChromeWindowApp::ChromeWindowApp() {
+}
 
-public:
-    ChromeWindowApp()
-    { }
+CefRefPtr<CefRenderProcessHandler> ChromeWindowApp::GetRenderProcessHandler() {
+    return this;
+}
 
-    // CefApp
-
-    virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() {
-        return this;
-    }
-
-    // CefRenderProcessHandler
-
-    virtual void OnContextCreated(
-        CefRefPtr<CefBrowser> browser,
-        CefRefPtr<CefFrame> frame,
-        CefRefPtr<CefV8Context> context
+void ChromeWindowApp::OnContextCreated(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefV8Context> context
     ) {
         CefRefPtr<CefV8Value> global = context->GetGlobal();
 
@@ -162,22 +134,22 @@ public:
         browser->SendProcessMessage(PID_BROWSER, message);
     }
 
-    virtual void OnContextReleased(
-        CefRefPtr<CefBrowser> browser,
-        CefRefPtr<CefFrame> frame,
-        CefRefPtr<CefV8Context> context
+void ChromeWindowApp::OnContextReleased(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefV8Context> context
     ) {
-    }
+}
 
-    virtual void OnWebKitInitialized() {
-    }
+void ChromeWindowApp::OnWebKitInitialized() {
+}
 
-    virtual bool OnProcessMessageReceived(
-        CefRefPtr<CefBrowser> browser, 
-        CefProcessId source_process, 
-        CefRefPtr<CefProcessMessage> message
+bool ChromeWindowApp::OnProcessMessageReceived(
+    CefRefPtr<CefBrowser> browser, 
+    CefProcessId source_process, 
+    CefRefPtr<CefProcessMessage> message
     ) {
-        if (message->GetName() == "arguments") {
+    if (message->GetName() == "arguments") {
             printf("Handling arguments\n");
             CefRefPtr<CefListValue> arguments = message.get()->GetArgumentList();
             CefRefPtr<CefV8Context> context = browser->GetMainFrame()->GetV8Context();
@@ -198,12 +170,12 @@ public:
 
     // CefV8Handler
 
-    virtual bool Execute(
-        const CefString& name,
-        CefRefPtr<CefV8Value> object,
-        const CefV8ValueList& arguments,
-        CefRefPtr<CefV8Value>& retval,
-        CefString& exception
+bool ChromeWindowApp::Execute(
+    const CefString& name,
+    CefRefPtr<CefV8Value> object,
+    const CefV8ValueList& arguments,
+    CefRefPtr<CefV8Value>& retval,
+    CefString& exception
     ) {
         if (name == "exit") {
             printf("Exiting with value %d!\n", arguments[0]->GetIntValue());
@@ -264,71 +236,8 @@ public:
 
         return false;
     }
-};
 
 void noOpenWindow() {
     printf("Test tried to window.open!  This is bad!\n");
     exit(1);
-}
-
-int main(int argc, char** argv) {
-    {
-        setlocale(LC_ALL, "");
-        CefMainArgs main_args(argc, argv);
-        CefRefPtr<CefCommandLine> commandLine(CefCommandLine::CreateCommandLine());
-        commandLine->InitFromArgv(main_args.argc, main_args.argv);
-
-        CefRefPtr<CefApp> app(new ChromeWindowApp());
-
-        // Execute the secondary process, if any.
-        int exit_code = CefExecuteProcess(main_args, app.get());
-        if (exit_code >= 0) {
-            return exit_code;
-        }
-        printf("CefCommandLine %S\n", commandLine->GetCommandLineString().ToWString().c_str());
-
-        gtk_init(&argc, &argv);
-
-
-        if (argc < 2) {
-            printf("Syntax: %s filename.js [args for js]\n", argv[0]);
-            return 1;
-        }
-
-        CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient());
-
-        CefMainArgs args(argc, argv);
-        CefSettings appSettings;
-        appSettings.remote_debugging_port = 24042;
-        //appSettings.log_severity = LOGSEVERITY_VERBOSE;
-        CefInitialize(main_args, appSettings, app);
-
-        //GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        //gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
-
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(gtk_widget_destroyed), &window);
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(CefQuitMessageLoop), NULL);
-
-        CefWindowInfo info;
-        //info.SetAsChild(window);
-
-        CefBrowserSettings settings;
-        settings.web_security_disabled = true;
-
-        CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(
-            info, client.get(),
-            "data:text/html,<!DOCTYPE html><html><head></head><body></body><script>void 0;</script></html>",
-            settings
-        );
-
-        //gtk_widget_show_all(GTK_WIDGET(window));
-
-        CefRunMessageLoop();
-    }
-    CefShutdown();
-
-
-    return s_result;
 }

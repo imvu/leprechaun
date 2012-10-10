@@ -1,7 +1,7 @@
+import sys
 
 SRC = [
-    'main.cpp',
-    '$CEFBIN/obj.target/cef/libcef_dll_wrapper.a',
+    'main.cpp'
 ]
 
 env = Environment()
@@ -9,12 +9,10 @@ env = Environment()
 OUTDIR = Dir('#/build')
 
 env.Append(
-    CEF='/home/cit/src/chromium',
-    CEFBIN='$CEF/src/out/Release/',
-    #CEFBIN='$CEF/src/out/Debug/',
+    CEFDIR=ARGUMENTS.get('CEFDIR', '/home/cit/src/chromium'),
 
     CPPPATH=[
-        '$CEF/src/cef'
+        '$CEFDIR/src/cef'
     ],
 
     CPPFLAGS=[
@@ -22,20 +20,78 @@ env.Append(
         '-g'
     ],
 
-    LIBPATH=[
-        '$CEFBIN/obj.target/cef'
-    ],
-
     LIBS=[
-        'cef',
         'ssl'
     ],
 )
 
-env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
+if sys.platform.startswith('linux'):
+    SRC.extend(['linux_main.cpp',
+                '$CEFBIN/obj.target/cef/libcef_dll_wrapper.a'])
 
-program = env.Program(OUTDIR.File('leprechaun'), SRC)
-libcef = env.Install(OUTDIR, '$CEFBIN/obj.target/cef/libcef.so')
-locales = env.Install(OUTDIR, '$CEF/src/out/Release/locales')
+    env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
-env.Default([program, libcef, locales])
+    env.Append(
+        CEFBIN='$CEFDIR/src/out/Release/obj.target/cef',
+        #CEFBIN='$CEF/src/out/Debug/',
+        LIBPATH=[
+            '$CEFBIN/obj.target/cef'
+        ],
+
+        LIBS=[
+            'cef'
+        ]
+    )
+
+    
+    program = env.Program(OUTDIR.File('leprechaun'), SRC)
+    libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
+    #locales = env.Install(OUTDIR, '$CEFDIR/src/out/Release/locales')
+
+    env.Default([
+        program, libcef#, locales
+    ])
+
+elif sys.platform == 'darwin':
+    SRC.append('mac_main.mm')
+    SRC.append('$CEFBIN/libcef_dll_wrapper.a')
+
+    env.Append(
+        CCFLAGS=['-arch', 'i386', '-g', '-O0'],
+        LINKFLAGS=['-arch', 'i386'],
+        FRAMEWORKS=['CoreFoundation', 'AppKit'],
+        CEFBIN='$CEFDIR/src/xcodebuild/Debug',
+        LIBPATH=[
+            '$CEFBIN'
+        ],
+        LIBS=[
+            'c++',
+            'objc',
+            'cef',
+    #'cef_dll_wrapper'
+        ]
+    )
+
+    BUNDLE = OUTDIR.Dir('leprechaun.app')
+
+    libcef = env.File('$CEFBIN/libcef$SHLIBSUFFIX')
+
+    process_helper = env.Program(
+        'leprechaun Helper',
+        ['process_helper.cpp',
+         'main.cpp',
+         '$CEFBIN/libcef_dll_wrapper.a'])
+
+    FRAMEWORKS = env.Dir('$CEFBIN/cefclient.app/Contents/Frameworks')
+
+    d = env.Default([
+        env.Install(BUNDLE.Dir('Contents'), 'Info.plist'),
+        env.Install(BUNDLE.Dir('Contents/MacOS'), libcef),
+        env.Program(BUNDLE.Dir('Contents/MacOS').File('leprechaun'), SRC),
+        env.Install(BUNDLE.Dir('Contents/Frameworks'), FRAMEWORKS.Dir('Chromium Embedded Framework.framework/')),
+        Command(BUNDLE.File('Contents/Frameworks/leprechaun Helper.app/Contents/Info.plist'), 'Helper.plist', Copy('$TARGET', '$SOURCE')),
+        env.Install(BUNDLE.Dir('Contents/Frameworks/leprechaun Helper.app/Contents/MacOS'), [
+            process_helper,
+            libcef
+            ])
+    ])
