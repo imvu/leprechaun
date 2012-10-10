@@ -8,5 +8,7 @@
     <string>leprechaun</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+    <key>LSUIElement</key>
+    <string>1</string>
 </dict>
 </plist>
