@@ -11,11 +11,11 @@
 #include "include/cef_v8.h"
 #include "include/cef_app.h"
 
-struct ChromeWindowApp : public CefApp
-                       , public CefRenderProcessHandler
-                       , public CefV8Handler
+struct Application : public CefApp
+                   , public CefRenderProcessHandler
+                   , public CefV8Handler
 {
-    ChromeWindowApp();
+    Application();
 
     virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler();
 
@@ -52,35 +52,6 @@ private:
     CefRefPtr<CefV8Value> leprechaunObj;
     std::wstring outBuffer;
 
-    IMPLEMENT_REFCOUNTING(ChromeWindowApp);
+    IMPLEMENT_REFCOUNTING(Application);
 };
 
-struct ChromeWindowClient : public CefClient
-                          , public CefLifeSpanHandler
-                          , public CefDisplayHandler
-                          , public CefRequestHandler
-{
-    ChromeWindowClient();
-    ~ChromeWindowClient();
-
-    // CefClient
-    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler();
-    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler();
-
-    // CefLifeSpanHandler
-    CefRefPtr<CefBrowser> browser;
-
-    virtual void OnAfterCreated(CefRefPtr<CefBrowser> aBrowser);
-
-    // CefRequestHandler
-    virtual bool OnProcessMessageReceived(
-        CefRefPtr<CefBrowser> browser,
-        CefProcessId source_process,
-        CefRefPtr<CefProcessMessage> message
-    );
-
-    IMPLEMENT_REFCOUNTING(ChromeWindowClient);
-};
-
-// aieeeee
-extern int s_result;

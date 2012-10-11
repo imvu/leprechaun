@@ -7,8 +7,8 @@
 #include "include/cef_app.h"
 #include "include/cef_base.h"
 
-
-#include "main.h"
+#include "Application.h"
+#include "WindowClient.h"
 
 int main(int argc, char** argv) {
     {
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         CefRefPtr<CefCommandLine> commandLine(CefCommandLine::CreateCommandLine());
         commandLine->InitFromArgv(main_args.argc, main_args.argv);
 
-        CefRefPtr<CefApp> app(new ChromeWindowApp());
+        CefRefPtr<CefApp> app(new Application());
 
         // Execute the secondary process, if any.
         int exit_code = CefExecuteProcess(main_args, app.get());
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient());
+        CefRefPtr<WindowClient> client(new WindowClient());
 
         CefMainArgs args(argc, argv);
         CefSettings appSettings;

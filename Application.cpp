@@ -1,23 +1,15 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <cassert>
+#include "Application.h"
+
 #include <fstream>
 #include <sstream>
 
-#include "main.h"
-#include "include/cef_base.h"
-#include "include/cef_client.h"
-
-#include "include/cef_app.h"
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "include/cef_runnable.h"
-#include "include/cef_task.h"
-#include "include/cef_v8.h"
-#include "include/cef_app.h"
-
 int s_result = 0;
+
+void noOpenWindow() {
+    printf("Test tried to window.open!  This is bad!\n");
+    exit(1);
+}
 
 std::string readFile(const std::string& fileName) {
     return std::string(
@@ -34,66 +26,14 @@ void bootstrap(const CefRefPtr<CefFrame>& frame, const std::string& fileName) {
     frame->ExecuteJavaScript(sourceCode, "", 0);
 }
 
-ChromeWindowClient::ChromeWindowClient() {
+Application::Application() {
 }
 
-ChromeWindowClient::~ChromeWindowClient() {
-}
-
-CefRefPtr<CefDisplayHandler> ChromeWindowClient::GetDisplayHandler() {
+CefRefPtr<CefRenderProcessHandler> Application::GetRenderProcessHandler() {
     return this;
 }
 
-CefRefPtr<CefLifeSpanHandler> ChromeWindowClient::GetLifeSpanHandler() {
-    return this;
-}
-
-void ChromeWindowClient::OnAfterCreated(CefRefPtr<CefBrowser> aBrowser) {
-    if (browser.get()) {
-        return;
-    }
-
-    browser = aBrowser;
-}
-
-bool ChromeWindowClient::OnProcessMessageReceived(
-    CefRefPtr<CefBrowser> browser,
-    CefProcessId source_process,
-    CefRefPtr<CefProcessMessage> message
-) {
-    if (message->GetName() == "getArguments") {
-        CefRefPtr<CefProcessMessage> outMessage = CefProcessMessage::Create("arguments");
-        CefCommandLine::ArgumentList arguments;
-        CefCommandLine::GetGlobalCommandLine()->GetArguments(arguments);
-        CefRefPtr<CefListValue> argList = outMessage->GetArgumentList();
-        argList->SetSize(arguments.size());
-        for(int i = 0; i < arguments.size(); ++i) {
-            argList->SetString(i, arguments.at(i));
-        }
-        browser->SendProcessMessage(PID_RENDERER, outMessage);
-        return true;
-    } else if (message->GetName() == "quit") {
-        s_result = message->GetArgumentList()->GetInt(0);
-        printf("Quitting with value %d\n", s_result);
-        printf("Log:\n%S", message->GetArgumentList()->GetString(1).ToWString().c_str());
-        CefPostTask(
-            TID_UI,
-            NewCefRunnableFunction(&CefQuitMessageLoop)
-            );
-    } else {
-        printf("Unknown message %s\n", message->GetName().ToString().c_str());
-    }
-    return false;
-}
-
-ChromeWindowApp::ChromeWindowApp() {
-}
-
-CefRefPtr<CefRenderProcessHandler> ChromeWindowApp::GetRenderProcessHandler() {
-    return this;
-}
-
-void ChromeWindowApp::OnContextCreated(
+void Application::OnContextCreated(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefV8Context> context
@@ -133,17 +73,17 @@ void ChromeWindowApp::OnContextCreated(
     browser->SendProcessMessage(PID_BROWSER, message);
 }
 
-void ChromeWindowApp::OnContextReleased(
+void Application::OnContextReleased(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefV8Context> context
 ) {
 }
 
-void ChromeWindowApp::OnWebKitInitialized() {
+void Application::OnWebKitInitialized() {
 }
 
-bool ChromeWindowApp::OnProcessMessageReceived(
+bool Application::OnProcessMessageReceived(
     CefRefPtr<CefBrowser> browser, 
     CefProcessId source_process, 
     CefRefPtr<CefProcessMessage> message
@@ -168,7 +108,7 @@ bool ChromeWindowApp::OnProcessMessageReceived(
 
 // CefV8Handler
 
-bool ChromeWindowApp::Execute(
+bool Application::Execute(
     const CefString& name,
     CefRefPtr<CefV8Value> object,
     const CefV8ValueList& arguments,
@@ -192,7 +132,6 @@ bool ChromeWindowApp::Execute(
     } else if (name == "open") {
 
     } else if (name == "openWindow") {
-        void noOpenWindow();
         CefPostTask(
             TID_UI,
             NewCefRunnableFunction(&noOpenWindow)
@@ -228,7 +167,3 @@ bool ChromeWindowApp::Execute(
     return false;
 }
 
-void noOpenWindow() {
-    printf("Test tried to window.open!  This is bad!\n");
-    exit(1);
-}
