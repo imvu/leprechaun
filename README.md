@@ -20,7 +20,7 @@ Leprechaun has been tested to build on Linux and OSX 10.8.  No other configurati
 
 First, [Compile CEF](http://code.google.com/p/chromiumembedded/wiki/BranchesAndBuilding).  We are using the 1180 CEF3 branch.  Be sure to pay close attention to the Chromium build instructions, as there is an important step there to exclude certain test cases which will cause your build to take several times as long.
 
-* On Ubuntu 10, you may have to change line 986 of net/third_party/nss/ssl/ssl3ecc.c for Chromium to build on our Ubuntu setup
+* On Ubuntu 10, you may have to change line 986 of net/third_party/nss/ssl/ssl3ecc.c for Chromium to build
 
   Comment out the line that reads
   

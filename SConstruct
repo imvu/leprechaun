@@ -1,7 +1,8 @@
 import sys
 
 SRC = [
-    'main.cpp'
+    'Application.cpp',
+    'WindowClient.cpp'
 ]
 
 env = Environment()
@@ -45,14 +46,12 @@ if sys.platform.startswith('linux'):
             'cef'
         ]
     )
-
     
     program = env.Program(OUTDIR.File('leprechaun'), SRC)
     libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
-    #locales = env.Install(OUTDIR, '$CEFDIR/src/out/$CEFCONFIG/locales')
 
     env.Default([
-        program, libcef#, locales
+        program, libcef
     ])
 
 elif sys.platform == 'darwin':
@@ -70,8 +69,7 @@ elif sys.platform == 'darwin':
         LIBS=[
             'c++',
             'objc',
-            'cef',
-    #'cef_dll_wrapper'
+            'cef'
         ]
     )
 
@@ -82,7 +80,7 @@ elif sys.platform == 'darwin':
     process_helper = env.Program(
         'leprechaun Helper',
         ['process_helper.cpp',
-         'main.cpp',
+         'Application.cpp',
          '$CEFBIN/libcef_dll_wrapper.a'])
 
     FRAMEWORKS = env.Dir('$CEFBIN/cefclient.app/Contents/Frameworks')
