@@ -6,7 +6,7 @@ SRC = [
 
 env = Environment()
 
-OUTDIR = Dir('#/build')
+OUTDIR = Dir('#/leprechaun-binaries')
 
 CEFDIR = ARGUMENTS.get('CEFDIR', '/home/cit/src/chromium')
 CEFCONFIG = ARGUMENTS.get('CEFCONFIG', 'Release')

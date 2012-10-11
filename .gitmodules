@@ -1,0 +1,3 @@
+[submodule "leprechaun-binaries"]
+	path = leprechaun-binaries
+	url = git@github.com:imvu/leprechaun-binaries.git

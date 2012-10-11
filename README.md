@@ -5,12 +5,22 @@ Its commandline syntax is simply this:
     leprechaun path_to_script.js
 
 Internally, we use Leprechaun to run our JavaScript unit tests.  The way this works is that we run a small JavaScript script which opens a new browser frame, attaches some hooks to listen for error conditions and console messages, and points it at the test.
+
+# Disclaimer
+This is very young software.  It has a lot of rough edges just now.  We think it works, but consider yourself warned.
+
+# FAQ
+## How is this different from PhantomJS?
+[PhantomJS](http://phantomjs.org/) is built atop QtWebKit, which is about a year and a half behind what you get in Chrome today.  It therefore lacks a bunch of useful things, like Float64Array.
+
+Leprechaun (as of this writing) embeds Chrome 23.0.1271.18 via the thoroughly excellent [CEF](http://code.google.com/p/chromiumembedded/).  Leprechaun supports whatever modern Chrome supports.
+
 # Compiling
-Do all of this on Linux.  Leprechaun has had absolutely zero testing on Windows or OSX.
+Leprechaun has been tested to build on Linux and OSX 10.8.  No other configurations have been tested.
 
 First, [Compile CEF](http://code.google.com/p/chromiumembedded/wiki/BranchesAndBuilding).  We are using the 1180 CEF3 branch.  Be sure to pay close attention to the Chromium build instructions, as there is an important step there to exclude certain test cases which will cause your build to take several times as long.
 
-* You will have to change line 986 of net/third_party/nss/ssl/ssl3ecc.c for Chromium to build on our Ubuntu setup
+* On Ubuntu 10, you may have to change line 986 of net/third_party/nss/ssl/ssl3ecc.c for Chromium to build on our Ubuntu setup
 
   Comment out the line that reads
   
@@ -44,5 +54,6 @@ Most of Leprechaun's inner workings actually happen in JavaScript.  When the ini
 test.js works by listening to the Chromium debugger by opening a websocket to localhost.  Through this condiut, we listen for errors, console messages, and eventually actually loads the test in question in a new browser frame.
 
 # Future improvements
+* Windows support
 * Performance isn't as good as we'd like.  PhantomJS is much faster.
   * Is the debugger API killing us?

@@ -38,7 +38,6 @@ ChromeWindowClient::ChromeWindowClient() {
 }
 
 ChromeWindowClient::~ChromeWindowClient() {
-    printf("Shutting down client\n");
 }
 
 CefRefPtr<CefDisplayHandler> ChromeWindowClient::GetDisplayHandler() {
@@ -183,7 +182,6 @@ bool ChromeWindowApp::Execute(
         CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("quit");
         message->GetArgumentList()->SetInt(0, arguments[0]->GetIntValue());
         message->GetArgumentList()->SetString(1, this->outBuffer);
-        //printf("Sending message to quit, log:\n%S\n", this->outBuffer.c_str());
         if(CefV8Context::GetEnteredContext()->GetBrowser()->SendProcessMessage(PID_BROWSER, message)) {
             printf("Got true from quit send process\n");
         } else { 
@@ -214,22 +212,16 @@ bool ChromeWindowApp::Execute(
             ss << arguments[i]->GetStringValue().ToWString();
         }
         printf("Got log: %S\n", ss.str().c_str());
-        //CefRefPtr<CefV8Value> onConsoleMessageFunc = this->leprechaunObj->GetValue("onConsoleMessage");
-        // Right now we're passing the original arguments; should we be passing the single string instead?
-        //onConsoleMessageFunc->ExecuteFunction(this->leprechaunObj, arguments);
         return true;
     } else if (name == "echo") {
         std::wstringstream ss;
         for (size_t i = 0; i < arguments.size(); ++i) {
             ss << arguments[i]->GetStringValue().ToWString();
         }
-        //printf(">>>%S\n", ss.str().c_str());
         this->outBuffer += ss.str().c_str();
         this->outBuffer += L"\n";
         return true;
     } else if (name == "onerror") {
-        //CefRefPtr<CefV8Value> onErrorFunc = this->leprechaunObj->GetValue("onError");
-        //onErrorFunc->ExecuteFunction();
         return true;
     }
 
