@@ -8,8 +8,12 @@ env = Environment()
 
 OUTDIR = Dir('#/build')
 
+CEFDIR = ARGUMENTS.get('CEFDIR', '/home/cit/src/chromium')
+CEFCONFIG = ARGUMENTS.get('CEFCONFIG', 'Release')
+
 env.Append(
-    CEFDIR=ARGUMENTS.get('CEFDIR', '/home/cit/src/chromium'),
+    CEFDIR=CEFDIR,
+    CEFCONFIG=CEFCONFIG,
 
     CPPPATH=[
         '$CEFDIR/src/cef'
@@ -32,8 +36,7 @@ if sys.platform.startswith('linux'):
     env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
     env.Append(
-        CEFBIN='$CEFDIR/src/out/Release/obj.target/cef',
-        #CEFBIN='$CEF/src/out/Debug/',
+        CEFBIN='$CEFDIR/src/out/$CEFCONFIG/obj.target/cef',
         LIBPATH=[
             '$CEFBIN/obj.target/cef'
         ],
@@ -46,7 +49,7 @@ if sys.platform.startswith('linux'):
     
     program = env.Program(OUTDIR.File('leprechaun'), SRC)
     libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
-    #locales = env.Install(OUTDIR, '$CEFDIR/src/out/Release/locales')
+    #locales = env.Install(OUTDIR, '$CEFDIR/src/out/$CEFCONFIG/locales')
 
     env.Default([
         program, libcef#, locales
@@ -57,10 +60,10 @@ elif sys.platform == 'darwin':
     SRC.append('$CEFBIN/libcef_dll_wrapper.a')
 
     env.Append(
-        CCFLAGS=['-arch', 'i386', '-g', '-O0'],
+        CCFLAGS=['-arch', 'i386', '-g', '-O0', '-fvisibility=hidden'],
         LINKFLAGS=['-arch', 'i386'],
         FRAMEWORKS=['CoreFoundation', 'AppKit'],
-        CEFBIN='$CEFDIR/src/xcodebuild/Debug',
+        CEFBIN='$CEFDIR/src/xcodebuild/$CEFCONFIG',
         LIBPATH=[
             '$CEFBIN'
         ],

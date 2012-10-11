@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
             return exit_code;
         }
 
-        if (FILE* f = fopen("out.txt", "w")) {
+        if (FILE* f = fopen("out.txt", "a")) {
             fprintf(f, "CefCommandLine %S\n", commandLine->GetCommandLineString().ToWString().c_str());
             fclose(f);
         }
@@ -47,16 +47,7 @@ int main(int argc, char** argv) {
         //appSettings.log_severity = LOGSEVERITY_VERBOSE;
         CefInitialize(main_args, appSettings, app);
 
-        //GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        //gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
-
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(gtk_widget_destroyed), &window);
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(CefQuitMessageLoop), NULL);
-
         CefWindowInfo info;
-        //info.SetAsChild(window);
 
         CefBrowserSettings settings;
         settings.web_security_disabled = true;
