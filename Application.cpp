@@ -1,6 +1,7 @@
 
 #include "Application.h"
 
+#include <stdlib.h>
 #include <fstream>
 #include <sstream>
 

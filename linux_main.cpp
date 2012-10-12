@@ -1,6 +1,10 @@
 
 #include <gtk/gtk.h>
-#include "main.h"
+
+#include <locale.h>
+
+#include "Application.h"
+#include "WindowClient.h"
 
 int main(int argc, char** argv) {
     {
@@ -9,7 +13,7 @@ int main(int argc, char** argv) {
         CefRefPtr<CefCommandLine> commandLine(CefCommandLine::CreateCommandLine());
         commandLine->InitFromArgv(main_args.argc, main_args.argv);
 
-        CefRefPtr<CefApp> app(new ChromeWindowApp());
+        CefRefPtr<CefApp> app(new Application());
 
         // Execute the secondary process, if any.
         int exit_code = CefExecuteProcess(main_args, app.get());
@@ -20,30 +24,20 @@ int main(int argc, char** argv) {
 
         gtk_init(&argc, &argv);
 
-
         if (argc < 2) {
             printf("Syntax: %s filename.js [args for js]\n", argv[0]);
             return 1;
         }
 
-        CefRefPtr<ChromeWindowClient> client(new ChromeWindowClient());
+        CefRefPtr<WindowClient> client(new WindowClient());
 
         CefMainArgs args(argc, argv);
         CefSettings appSettings;
         appSettings.remote_debugging_port = 24042;
-        //appSettings.log_severity = LOGSEVERITY_VERBOSE;
+        appSettings.log_severity = LOGSEVERITY_DISABLE;
         CefInitialize(main_args, appSettings, app);
 
-        //GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        //gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
-
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(gtk_widget_destroyed), &window);
-        //g_signal_connect(G_OBJECT(window), "destroy",
-        //                 G_CALLBACK(CefQuitMessageLoop), NULL);
-
         CefWindowInfo info;
-        //info.SetAsChild(window);
 
         CefBrowserSettings settings;
         settings.web_security_disabled = true;

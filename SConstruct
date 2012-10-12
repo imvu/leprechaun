@@ -31,16 +31,16 @@ env.Append(
 )
 
 if sys.platform.startswith('linux'):
+    OUTDIR = OUTDIR.Dir('linux')
+
     SRC.extend(['linux_main.cpp',
-                '$CEFBIN/obj.target/cef/libcef_dll_wrapper.a'])
+                '$CEFBIN/libcef_dll_wrapper.a'])
 
     env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
     env.Append(
-        CEFBIN='$CEFDIR/src/out/$CEFCONFIG/obj.target/cef',
-        LIBPATH=[
-            '$CEFBIN/obj.target/cef'
-        ],
+        CEFBIN = '$CEFDIR/src/out/$CEFCONFIG/obj.target/cef',
+        LIBPATH=['$CEFDIR/src/out/$CEFCONFIG/lib.target/'],
 
         LIBS=[
             'cef'
@@ -49,12 +49,17 @@ if sys.platform.startswith('linux'):
     
     program = env.Program(OUTDIR.File('leprechaun'), SRC)
     libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
+    locales = env.Install(OUTDIR, '$CEFDIR/src/out/$CEFCONFIG/locales')
 
     env.Default([
-        program, libcef
+            program,
+            libcef,
+            locales
     ])
 
 elif sys.platform == 'darwin':
+    OUTDIR = OUTDIR.Dir('mac')
+
     SRC.append('mac_main.mm')
     SRC.append('$CEFBIN/libcef_dll_wrapper.a')
 
