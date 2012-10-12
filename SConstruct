@@ -5,7 +5,9 @@ SRC = [
     'WindowClient.cpp'
 ]
 
-env = Environment()
+env = Environment(
+    CC='clang',
+    CXX='clang++')
 
 OUTDIR = Dir('#/leprechaun-binaries')
 
@@ -21,12 +23,8 @@ env.Append(
     ],
 
     CPPFLAGS=[
-        '-O3',
+        '-O1',
         '-g'
-    ],
-
-    LIBS=[
-        'ssl'
     ],
 )
 
@@ -59,7 +57,7 @@ elif sys.platform == 'darwin':
     SRC.append('$CEFBIN/libcef_dll_wrapper.a')
 
     env.Append(
-        CCFLAGS=['-arch', 'i386', '-g', '-O0', '-fvisibility=hidden'],
+        CCFLAGS=['-arch', 'i386', '-g', '-Wall', '-Werror', '-fvisibility=hidden'],
         LINKFLAGS=['-arch', 'i386'],
         FRAMEWORKS=['CoreFoundation', 'AppKit'],
         CEFBIN='$CEFDIR/src/xcodebuild/$CEFCONFIG',
