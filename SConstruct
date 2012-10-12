@@ -67,8 +67,6 @@ elif sys.platform == 'darwin':
             '$CEFBIN'
         ],
         LIBS=[
-            'c++',
-            'objc',
             'cef'
         ]
     )
