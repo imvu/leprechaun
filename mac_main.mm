@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
         appSettings.pack_loading_disabled = true;
         appSettings.remote_debugging_port = 24042;
         //appSettings.log_severity = LOGSEVERITY_VERBOSE;
+        appSettings.log_severity = LOGSEVERITY_DISABLE;
         CefInitialize(main_args, appSettings, app);
 
         CefWindowInfo info;
