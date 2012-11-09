@@ -1,11 +1,14 @@
 import sys
+import os
 
 SRC = [
     'Application.cpp',
     'WindowClient.cpp'
 ]
 
-env = Environment()
+env = Environment(
+  ENV=os.environ,
+)
 
 OUTDIR = Dir('#/leprechaun-binaries')
 
@@ -18,15 +21,6 @@ env.Append(
 
     CPPPATH=[
         '$CEFDIR/src/cef'
-    ],
-
-    CPPFLAGS=[
-        '-O3',
-        '-g'
-    ],
-
-    LIBS=[
-        'ssl'
     ],
 )
 
@@ -42,8 +36,14 @@ if sys.platform.startswith('linux'):
         CEFBIN = '$CEFDIR/src/out/$CEFCONFIG/obj.target/cef',
         LIBPATH=['$CEFDIR/src/out/$CEFCONFIG/lib.target/'],
 
+    	CPPFLAGS=[
+            '-O3',
+            '-g'
+        ],
+
         LIBS=[
-            'cef'
+            'cef',
+            'ssl'
         ]
     )
     
@@ -71,10 +71,16 @@ elif sys.platform == 'darwin':
         LIBPATH=[
             '$CEFBIN'
         ],
+
+        CPPFLAGS=[
+            '-O3',
+            '-g'
+        ],
         LIBS=[
             'c++',
             'objc',
-            'cef'
+            'cef',
+            'ssl'
         ]
     )
 
@@ -100,4 +106,56 @@ elif sys.platform == 'darwin':
             process_helper,
             libcef
             ])
+    ])
+
+else: # Windows
+    OUTDIR = OUTDIR.Dir('windows')
+
+    SRC.extend(['win_main.cpp'])
+
+    env.Append(
+        CEFBIN = '$CEFDIR/src/build/$CEFCONFIG',
+        LIBPATH=[
+	    '$CEFBIN/lib',
+            'c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\lib',
+            'C:\Program Files\Microsoft SDKs\Windows\\v6.0A\Lib',
+        ],
+
+	CPPPATH=[
+            'C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include',
+            'C:\Program Files\Microsoft SDKs\Windows\\v6.0A\Include',
+        ],
+
+	CPPFLAGS=[
+            '/MT',
+            '/EHsc',
+            '/arch:SSE2',
+        ],
+
+	LINKFLAGS=[
+            '/MACHINE:x86',
+        ],
+
+        LIBS=[
+            'libcef_dll_wrapper',
+            'libcef',
+        ]
+    )
+
+    env.Replace(
+        TARGET_ARCH='x86',
+        CC='"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\bin\\cl.exe"',
+        LINK='"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\bin\\link.exe"',
+    )
+
+    program = env.Program(OUTDIR.File('leprechaun.exe'), SRC)
+    libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
+    locales = env.Install(OUTDIR, '$CEFDIR/src/build/$CEFCONFIG/locales')
+
+    print env.Dump()
+
+    env.Default([
+            program,
+            libcef,
+            locales
     ])

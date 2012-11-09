@@ -104,6 +104,7 @@ bool Application::OnProcessMessageReceived(
         return true;
     } else {
         printf("Unknown render message %s\n", message->GetName().ToString().c_str());
+	return false;
     }
 }
 
