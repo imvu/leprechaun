@@ -1,0 +1,99 @@
+﻿Build started 11/12/2012 3:59:39 PM.
+     1>Project "C:\leprechaun\MSVS\leprechaun.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "Debug\leprechaun.unsuccessfulbuild".
+       ClCompile:
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\leprechaun\MSVS\Debug\leprechaun.exe" /NOLOGO /LIBPATH:C:\CEF\chromium\src\build\Debug\lib /LIBPATH:C:\CEF\chromium\src\build\Debug kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libcef_dll_wrapper.lib libcef.lib /MANIFEST /ManifestFile:"Debug\leprechaun.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\leprechaun\MSVS\Debug\leprechaun.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\leprechaun\MSVS\Debug\leprechaun.lib" /MACHINE:X86 Debug\Application.obj
+         Debug\WindowClient.obj
+         Debug\win_main.obj
+     1>libcef_dll_wrapper.lib(process_message_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8value_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(libcef_dll_wrapper.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8context_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(command_line_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(browser_host_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(list_value_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(transfer_util.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8accessor_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8exception_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(zip_reader_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(xml_reader_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(write_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(web_plugin_unstable_callback_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(web_plugin_info_visitor_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(web_plugin_info_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8stack_trace_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(v8stack_frame_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(urlrequest_client_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(urlrequest_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(trace_client_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(task_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(string_visitor_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(stream_writer_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(stream_reader_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(scheme_registrar_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(scheme_handler_factory_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(run_file_dialog_callback_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(resource_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(resource_bundle_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(request_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(render_process_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(read_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(quota_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(proxy_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(menu_model_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(load_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(life_span_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(keyboard_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(jsdialog_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(jsdialog_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(get_geolocation_callback_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(geolocation_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(geolocation_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(frame_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(focus_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(file_dialog_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(download_item_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(download_item_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(download_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(display_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(dictionary_value_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(dialog_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(domvisitor_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(domnode_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(domevent_listener_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(domevent_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(domdocument_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(cookie_visitor_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(cookie_manager_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(context_menu_params_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(context_menu_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(browser_process_handler_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(browser_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(binary_value_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(before_download_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(auth_callback_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(app_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(client_cpptoc.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(request_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(response_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(post_data_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcef_dll_wrapper.lib(post_data_element_ctocpp.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>libcpmtd.lib(stdthrow.obj) : error LNK2038: mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn't match value '0' in Application.obj
+     1>LIBCMTD.lib(dbgheap.obj) : error LNK2005: __heap_alloc already defined in LIBCMT.lib(malloc.obj)
+     1>LIBCMTD.lib(dbgheap.obj) : error LNK2005: __recalloc already defined in LIBCMT.lib(recalloc.obj)
+     1>LIBCMTD.lib(dbgheap.obj) : error LNK2005: __msize already defined in LIBCMT.lib(msize.obj)
+     1>LIBCMTD.lib(dbghook.obj) : error LNK2005: __crt_debugger_hook already defined in LIBCMT.lib(dbghook.obj)
+     1>LIBCMTD.lib(isctype.obj) : error LNK2005: __isctype_l already defined in LIBCMT.lib(isctype.obj)
+     1>LIBCMTD.lib(isctype.obj) : error LNK2005: __isctype already defined in LIBCMT.lib(isctype.obj)
+     1>LINK : warning LNK4098: defaultlib 'LIBCMTD' conflicts with use of other libs; use /NODEFAULTLIB:library
+     1>C:\leprechaun\MSVS\Debug\leprechaun.exe : fatal error LNK1169: one or more multiply defined symbols found
+     1>Done Building Project "C:\leprechaun\MSVS\leprechaun.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.32

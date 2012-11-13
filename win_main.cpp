@@ -23,10 +23,12 @@ int main(HINSTANCE hInstance,
         CefRefPtr<CefApp> app(new Application());
 
         // Execute the secondary process, if any.
-        int exit_code = CefExecuteProcess(main_args, app.get());
+        /*
+	int exit_code = CefExecuteProcess(main_args, app.get());
         if (exit_code >= 0) {
             return exit_code;
         }
+	*/
 
         if (FILE* f = fopen("out.txt", "a")) {
             fprintf(f, "CefCommandLine %S\n", commandLine->GetCommandLineString().ToWString().c_str());
@@ -46,8 +48,8 @@ int main(HINSTANCE hInstance,
         CefSettings appSettings;
         appSettings.pack_loading_disabled = true;
         appSettings.remote_debugging_port = 24042;
-        //appSettings.log_severity = LOGSEVERITY_VERBOSE;
-        appSettings.log_severity = LOGSEVERITY_DISABLE;
+        appSettings.log_severity = LOGSEVERITY_VERBOSE;
+        //appSettings.log_severity = LOGSEVERITY_DISABLE;
         CefInitialize(main_args, appSettings, app);
 
         CefWindowInfo info;
@@ -64,7 +66,6 @@ int main(HINSTANCE hInstance,
         CefRunMessageLoop();
     }
     CefShutdown();
-
 
     return s_result;
 }

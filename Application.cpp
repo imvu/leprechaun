@@ -95,7 +95,7 @@ bool Application::OnProcessMessageReceived(
         CefRefPtr<CefV8Context> context = browser->GetMainFrame()->GetV8Context();
         context->Enter();
         CefRefPtr<CefV8Value> args = CefV8Value::CreateArray(arguments->GetSize());
-        for (int i=0; i < arguments->GetSize(); ++i) {
+        for (unsigned int i=0; i < arguments->GetSize(); ++i) {
             args->SetValue(i, CefV8Value::CreateString(arguments->GetString(i)));
         }
         this->leprechaunObj->SetValue("args", args, V8_PROPERTY_ATTRIBUTE_READONLY);
@@ -144,10 +144,10 @@ bool Application::Execute(
         return true;
 
     } else if (name == "log") {
-        if (object->IsSame(this->leprechaunObj)) {
+        /*if (object->IsSame(this->leprechaunObj)) {
             // Figure out if we need this some day...
             return false;
-        }
+        }*/
         std::wstringstream ss;
         for (size_t i = 0; i < arguments.size(); ++i) {
             ss << arguments[i]->GetStringValue().ToWString();
@@ -159,8 +159,8 @@ bool Application::Execute(
         for (size_t i = 0; i < arguments.size(); ++i) {
             ss << arguments[i]->GetStringValue().ToWString();
         }
-        this->outBuffer += ss.str().c_str();
-        this->outBuffer += L"\n";
+	this->outBuffer += ss.str().c_str();
+	this->outBuffer += L"\n";
         return true;
     } else if (name == "onerror") {
         return true;

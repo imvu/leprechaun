@@ -33,7 +33,7 @@ bool WindowClient::OnProcessMessageReceived(
         CefCommandLine::GetGlobalCommandLine()->GetArguments(arguments);
         CefRefPtr<CefListValue> argList = outMessage->GetArgumentList();
         argList->SetSize(arguments.size());
-        for(int i = 0; i < arguments.size(); ++i) {
+        for(unsigned int i = 0; i < arguments.size(); ++i) {
             argList->SetString(i, arguments.at(i));
         }
         browser->SendProcessMessage(PID_RENDERER, outMessage);
@@ -42,6 +42,7 @@ bool WindowClient::OnProcessMessageReceived(
         s_result = message->GetArgumentList()->GetInt(0);
         printf("Quitting with value %d\n", s_result);
         printf("Log:\n%S", message->GetArgumentList()->GetString(1).ToWString().c_str());
+
         CefPostTask(
             TID_UI,
             NewCefRunnableFunction(&CefQuitMessageLoop)

@@ -1,0 +1,17 @@
+﻿Build started 11/12/2012 4:17:21 PM.
+     1>Project "C:\leprechaun\MSVS\leprechaun.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Release\leprechaun.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+       Link:
+         All outputs are up-to-date.
+         leprechaun.vcxproj -> C:\leprechaun\MSVS\Release\leprechaun.exe
+       FinalizeBuildStatus:
+         Deleting file "Release\leprechaun.unsuccessfulbuild".
+         Touching "Release\leprechaun.lastbuildstate".
+     1>Done Building Project "C:\leprechaun\MSVS\leprechaun.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.09
