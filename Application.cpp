@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 int s_result = 0;
 
@@ -158,6 +159,8 @@ bool Application::Execute(
         std::wstringstream ss;
         for (size_t i = 0; i < arguments.size(); ++i) {
             ss << arguments[i]->GetStringValue().ToWString();
+			std::cout << ss.str().c_str() << std::endl;
+			std::cout.flush();
         }
 	this->outBuffer += ss.str().c_str();
 	this->outBuffer += L"\n";
