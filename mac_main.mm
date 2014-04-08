@@ -31,8 +31,6 @@ int main(int argc, char** argv) {
         }
         printf("CefCommandLine %S\n", commandLine->GetCommandLineString().ToWString().c_str());
 
-        //gtk_init(&argc, &argv);
-
         if (argc < 2) {
             printf("Syntax: %s filename.js [args for js]\n", argv[0]);
             return 1;
@@ -58,8 +56,6 @@ int main(int argc, char** argv) {
             "data:text/html,<!DOCTYPE html><html><head></head><body></body><script>void 0;</script></html>",
             settings
         );
-
-        //gtk_widget_show_all(GTK_WIDGET(window));
 
         CefRunMessageLoop();
     }

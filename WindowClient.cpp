@@ -42,7 +42,7 @@ bool WindowClient::OnProcessMessageReceived(
         s_result = message->GetArgumentList()->GetInt(0);
         printf("Quitting with value %d\n", s_result);
         printf("Log:\n%S", message->GetArgumentList()->GetString(1).ToWString().c_str());
-		fflush(stdout);
+
         CefPostTask(
             TID_UI,
             NewCefRunnableFunction(&CefQuitMessageLoop)
