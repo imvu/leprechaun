@@ -24,13 +24,7 @@ Leprechaun (as of this writing) embeds Chrome 23.0.1271.18 via the thoroughly ex
 # Compiling
 Leprechaun has been tested to build on Linux and OSX 10.8.  No other configurations have been tested.
 
-First, [Compile CEF](http://code.google.com/p/chromiumembedded/wiki/BranchesAndBuilding).  We are using the 1180 CEF3 branch.  Be sure to pay close attention to the Chromium build instructions, as there is an important step there to exclude certain test cases which will cause your build to take several times as long.
-
-* On Ubuntu 10, you may have to change line 986 of net/third_party/nss/ssl/ssl3ecc.c for Chromium to build
-
-  Comment out the line that reads
-  
-      case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
+First, [Compile CEF](http://code.google.com/p/chromiumembedded/wiki/BranchesAndBuilding).  We are using the 1180 CEF3 branch.
 
 At the moment, the build scripts assume that you put the chrome source code at /home/cit/src/chromium
 
@@ -41,6 +35,8 @@ Install SCons
 Run SCons in the leprechaun source directory to compile.
 
     scons CEFDIR=path/to/chromium
+
+More up-to-date compiling hints can be found in [COMPILING](COMPILING.md)
 
 # How it Works
 
