@@ -121,8 +121,8 @@ edit cef/libcef/browser/browser_host_impl_gtk.cc
 replace the folling line:
 
     cef/libcef/browser/browser_host_impl_gtk.cc:110:
--   l10n_util::GetStringUTF8(IDS_SAVEAS_ALL_FILES).c_str());
-+   "All Files");
+    - l10n_util::GetStringUTF8(IDS_SAVEAS_ALL_FILES).c_str());
+    + "All Files");
 
 ## Actual building
 
