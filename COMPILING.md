@@ -1,6 +1,6 @@
-# Ubuntu 10.4
+# Ubuntu 12.04
 
-These instructions were put together in April of 2014.
+These instructions were put together in June of 2014.
 
 They are my best guess as to the steps that led to a complete build.
 
@@ -19,6 +19,10 @@ This will require at least 13G of space.
 
     gclient config http://src.chromium.org/svn/releases/21.0.1180.91
 
+    gclient sync --jobs 8 --force
+
+That last line will probably fail, but you need to run it to create the files that we edit next.
+
 edit 21.0.1180.91/DEPS
 
 change gsutil source to https://github.com/GoogleCloudPlatform/gsutil.git@158f32f
@@ -26,9 +30,23 @@ change gsutil source to https://github.com/GoogleCloudPlatform/gsutil.git@158f32
     cd src
     ./build/install-build-deps.sh
     cd ..
+
+    sudo apt-get install pkg-config
+    # these next packages were not being installed by install-build-deps for some reason:
+    sudo apt-get install libgtk2.0-dev
+    sudo apt-get install libnss3-dev
+    sudo apt-get install libgconf2-dev
+    sudo apt-get install libgcrypt11-dev
+    sudo apt-get install libgnome-keyring-dev
+    sudo apt-get install libdbus-glib-1-dev
+    sudo apt-get install libudev-dev
+    sudo apt-get install libcups2-dev
+    sudo apt-get install gperf
+    sudo apt-get install bison
+    sudo apt-get install libasound2-dev
+
     gclient sync --jobs 8 --force
 
-I had to run the sync several times. It seemed to get a new error each time I ran it until it finally passed.
 
 # Grab CEF
 
@@ -41,10 +59,6 @@ The next few steps may be unneccessary, but they worked for me:
 
     ./cef_create_projects.sh
         (that had an error for me)
-    edit 21.0.1180.91/DEPS to move trace-view from r168 to r55
-    ./cef_create_projects.sh
-        (this will break again)
-    edit 21.0.1180.91/DEPS back to r168
     cd ../../
     gclient sync --jobs 8 --force
         (this will fail now too, this time on gyp errors. Ignore it)
@@ -53,7 +67,7 @@ The next few steps may be unneccessary, but they worked for me:
 
 That seems to get me to a successful run.
 
-After that works, it told me to rerun gclient sync:
+After that works, rerun gclient sync again just to be sure, (from the chromium dir):
 
     gclient sync --jobs 8 --force
         (this will fail again, also on gyp errors. Ignore it again)
@@ -61,6 +75,8 @@ After that works, it told me to rerun gclient sync:
 # Make cefclient
 
 ## Code massage
+
+(back in the src directory)
 
 edit net/third_party/nss/ssl/ssl3ecc.c  line 986
 
@@ -94,7 +110,7 @@ here is the diff:
 
     svn up -r 1180 cef/libcef/browser/browser_host_impl_gtk.cc
 
-edit libcef/browser/browser_host_impl.cc
+edit cef/libcef/browser/browser_host_impl.cc
 
     1757: 
     - cef_file_dialog_mode_t mode;

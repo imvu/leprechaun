@@ -43,6 +43,7 @@ if sys.platform.startswith('linux'):
 
         LIBS=[
             'cef',
+            'crypto',
             'ssl'
         ]
     )
