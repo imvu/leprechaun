@@ -33,6 +33,7 @@ change gsutil source to https://github.com/GoogleCloudPlatform/gsutil.git@158f32
 
     sudo apt-get install pkg-config
     # these next packages were not being installed by install-build-deps for some reason:
+    # you can try the gclient sync first to see if it works for you
     sudo apt-get install libgtk2.0-dev
     sudo apt-get install libnss3-dev
     sudo apt-get install libgconf2-dev
@@ -55,7 +56,6 @@ change gsutil source to https://github.com/GoogleCloudPlatform/gsutil.git@158f32
 
     cd cef
 
-The next few steps may be unneccessary, but they worked for me:
 
     ./cef_create_projects.sh
         (that had an error for me)
@@ -108,7 +108,7 @@ here is the diff:
     INTERNAL_DECLARE_SET_TRACE_VALUE_INT(signed char, TRACE_VALUE_TYPE_INT)
 
 
-    svn up -r 1180 cef/libcef/browser/browser_host_impl_gtk.cc
+svn up -r 1180 cef/libcef/browser/browser_host_impl_gtk.cc
 
 edit cef/libcef/browser/browser_host_impl.cc
 
@@ -118,10 +118,11 @@ edit cef/libcef/browser/browser_host_impl.cc
 
 edit cef/libcef/browser/browser_host_impl_gtk.cc
 
-add the folling line:
+replace the folling line:
 
     cef/libcef/browser/browser_host_impl_gtk.cc:110:
-    "All Files");
+-   l10n_util::GetStringUTF8(IDS_SAVEAS_ALL_FILES).c_str());
++   "All Files");
 
 ## Actual building
 
@@ -129,7 +130,7 @@ add the folling line:
 
     ./build_projects.sh Release
 
-I had to run the build command several times as I kept getting further each time I ran it. Eventually it passed.
+This step takes a lot of memory, so if it fails due to a compiler crash, it is worth trying again to see if you get further.
 
 # Leprechaun
 
