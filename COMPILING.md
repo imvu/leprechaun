@@ -1,146 +1,225 @@
+These instructions were put together in June of 2015.
+
 # Ubuntu 12.04
 
-These instructions were put together in June of 2014.
+## Install p7zip
 
-They are my best guess as to the steps that led to a complete build.
+    sudo apt-get install p7zip
 
-I did not start with a fresh machine, so there may be additional packages need that are not listed in this file.
+## Download the compiled CEF binary for Linux 64bit or build CEF version 2357 from source
 
-This will require at least 13G of space.
+The pre-compiled binary distribution of CEF is not compatible with libstdc++ available on Ubuntu Precise so you will either want to build CEF from source or manually upgrade libstdc++.
 
-# Grab Chromium
+### To build from source:
 
-    svn co http://src.chromium.org/svn/trunk/tools/depot_tools
+    wget https://bitbucket.org/chromiumembedded/cef/raw/master/tools/automate/automate-git.py
+    python automate-git.py --download-dir=<some_temp_location> --branch=2357 --no-debug-build
+    cp -r <some_temp_location>/chromium/src/cef/binary_distrib/cef_binary_3.2357.1280.<some_hash>.linux64/ <somewhere>
 
-    export PATH=$PATH:<path to>/depot_tools/
+### To use the pre-compiled binary:
 
-    mkdir <path to>/chromium
-    cd <chromium path>
+[Linux 64bit CEF 3.2357.1276](https://cefbuilds.com/)
 
-    gclient config http://src.chromium.org/svn/releases/21.0.1180.91
+Once downloaded, unpack it:
 
-    gclient sync --jobs 8 --force
+    cd <somewhere>
+    p7zip -d /path/to/cef_binary_3.2357.1280.7z
 
-That last line will probably fail, but you need to run it to create the files that we edit next.
+## Install cmake 3.x
 
-edit 21.0.1180.91/DEPS
+Building the CEF binaries requires cmake >= 2.8.12.2 which is not available as a debian package on Ubuntu Precise.
 
-change gsutil source to https://github.com/GoogleCloudPlatform/gsutil.git@158f32f
+    cd <somewhere>
+    wget http://www.cmake.org/files/v3.2/cmake-3.2.3.tar.gz
+    tar -xf cmake-3.2.3.tar.gz
+    cd cmake-3.2.3/
+    ./bootstrap
+    make
+    sudo make install
 
-    cd src
-    ./build/install-build-deps.sh
-    cd ..
+## Install depot\_tools
 
-    sudo apt-get install pkg-config
-    # these next packages were not being installed by install-build-deps for some reason:
-    # you can try the gclient sync first to see if it works for you
-    sudo apt-get install libgtk2.0-dev
-    sudo apt-get install libnss3-dev
-    sudo apt-get install libgconf2-dev
-    sudo apt-get install libgcrypt11-dev
-    sudo apt-get install libgnome-keyring-dev
-    sudo apt-get install libdbus-glib-1-dev
-    sudo apt-get install libudev-dev
-    sudo apt-get install libcups2-dev
-    sudo apt-get install gperf
-    sudo apt-get install bison
-    sudo apt-get install libasound2-dev
+This can be done either by installing the depot\_tools debian package or by cloning the git repository.
 
-    gclient sync --jobs 8 --force
+### Install depot\_tools debian package:
 
+    sudo apt-get install depot_tools
 
-# Grab CEF
+### Clone the depot\_tools git repository:
 
-    cd src
-    svn co http://chromiumembedded.googlecode.com/svn/branches/1180/cef3 cef
+    cd <somewhere>
+    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    export PATH=$PATH:`pwd`/depot_tools
 
-    cd cef
+## Build the pre-built CEF binaries
 
+The libcef.so file is pre-built and included in the pre-built CEF binary package. However, the
+libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
+sample CEF applications.
 
-    ./cef_create_projects.sh
-        (that had an error for me)
-    cd ../../
-    gclient sync --jobs 8 --force
-        (this will fail now too, this time on gyp errors. Ignore it)
-    cd src/cef/
-    ./cef_create_projects.sh
+    cd /path/to/cef_binary_3.2357.1280_<some_hash>_linux64/
 
-That seems to get me to a successful run.
+The cmake configuration includes a compiler flag that is incompatible with the version of gcc that
+is available as a debian package on Ubuntu Precise. Either upgrade your gcc compiler to 4.7 or else
+manually edit the CMakeLists.txt file in the root of the pre-built CEF binary folder and change all
+instances of "-std=gnu++11" to "-std=c++0x".
 
-After that works, rerun gclient sync again just to be sure, (from the chromium dir):
+    mkdir build
+    cd build
+    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
+    ninja cefclient cefsimple
 
-    gclient sync --jobs 8 --force
-        (this will fail again, also on gyp errors. Ignore it again)
+## Install scons
 
-# Make cefclient
+This can be done either by installing the scons debian package or by downloading and installing the source.
 
-## Code massage
-
-(back in the src directory)
-
-edit net/third_party/nss/ssl/ssl3ecc.c  line 986
-
-comment out the line that reads
-
-    case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
-
-edit base/debug/trace_event.h
-
-here is the diff:
-
-    Index: base/debug/trace_event.h
-    diff --git a/base/debug/trace_event.h b/base/debug/trace_event.h
-    index a82b4a86699651ee4485015a22ba0bae700096d4..d73bb0a4011496930fe3f604ff1420ff6a712075 100644
-    --- a/base/debug/trace_event.h
-    +++ b/base/debug/trace_event.h
-    @@ -714,10 +714,12 @@ class TraceStringWithCopy {
-    }
-
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long long, TRACE_VALUE_TYPE_UINT)
-    +INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long, TRACE_VALUE_TYPE_UINT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned int, TRACE_VALUE_TYPE_UINT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned short, TRACE_VALUE_TYPE_UINT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned char, TRACE_VALUE_TYPE_UINT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long long, TRACE_VALUE_TYPE_INT)
-    +INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long, TRACE_VALUE_TYPE_INT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(int, TRACE_VALUE_TYPE_INT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(short, TRACE_VALUE_TYPE_INT)
-    INTERNAL_DECLARE_SET_TRACE_VALUE_INT(signed char, TRACE_VALUE_TYPE_INT)
-
-
-svn up -r 1180 cef/libcef/browser/browser_host_impl_gtk.cc
-
-edit cef/libcef/browser/browser_host_impl.cc
-
-    1757: 
-    - cef_file_dialog_mode_t mode;
-    + cef_file_dialog_mode_t mode = FILE_DIALOG_OPEN;
-
-edit cef/libcef/browser/browser_host_impl_gtk.cc
-
-replace the folling line:
-
-    cef/libcef/browser/browser_host_impl_gtk.cc:110:
-    - l10n_util::GetStringUTF8(IDS_SAVEAS_ALL_FILES).c_str());
-    + "All Files");
-
-## Actual building
-
-    cd <chromium path>/src/cef/tools
-
-    ./build_projects.sh Release
-
-This step takes a lot of memory, so if it fails due to a compiler crash, it is worth trying again to see if you get further.
-
-# Leprechaun
-
-## Install Scons
+### Install scons debian package:
 
     sudo apt-get install scons
 
-## Build leprechaun
+### Install scons from source:
 
-    cd <place where you have leprechaun checked out>
-    scons CEFDIR=<chromium path>
+    wget http://prdownloads.sourceforge.net/scons/scons-src-2.3.4.tar.gz
+    tar -xf scons-src-2.3.4.tar.gz
+    cd scons-src-2.3.4/
+    python bootstrap.py build/scons
+    cd build/scons
+    sudo python setup.py install
 
-# DONE!
+## Get Leprechaun
+
+    cd <somewhere>
+    git clone git@github.com:imvu/leprechaun.git
+
+## Build Leprechaun
+
+    cd leprechaun
+    scons CEFDIR=/path/to/extracted/cef
+
+The leprechaun binaries will be under leprechaun-binaries/linux/
+
+# OSX 10.9 XCode 5.1, SDK 10.6
+
+## Install TheUnarchiver
+
+    Go to http://unarchiver.c3.cx/unarchiver or http://wakaba.c3.cx/s/apps/unarchiver.html and download
+
+## Download the 64-bit compiled binary CEF library
+
+[Mac 64bit CEF 3.2357.1276.gd4b589c](https://cefbuilds.com/)
+
+Extract the downloaded archive file by navigating to it using Finder and double clicking on it.
+
+## Install cmake
+
+[cmake-3.2.3-Darwin-x86_64.dmg](http://www.cmake.org/files/v3.2/cmake-3.2.3-Darwin-x86_64.dmg)
+
+## Clone the depot\_tools git repository:
+
+    cd <somewhere>
+    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    export PATH=$PATH:`pwd`/depot_tools
+
+## Apply some patches to CEF
+
+/path/to/cef_binary_3.2357.1276.gd4b589c_macosx64/include/base/cef_build.h:141
+
+    -#define OVERRIDE override
+    +#define OVERRIDE
+
+## Build the pre-built CEF binaries
+
+The libcef.so file is pre-built and included in the pre-built CEF binary package. However, the
+libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
+sample CEF applications.
+
+    cd /path/to/cef_binary_3.2357.1276.gd4b589c_macosx64
+    mkdir build
+    cd build
+    /Applications/CMake.app/Contents/bin/cmake -G "Ninja" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release ..
+    ninja cefclient cefsimple
+
+### Install scons:
+
+    wget http://prdownloads.sourceforge.net/scons/scons-src-2.3.4.tar.gz
+    tar -xf scons-src-2.3.4.tar.gz
+    cd scons-src-2.3.4/
+    python bootstrap.py build/scons
+    cd build/scons
+    sudo python setup.py install
+
+## Get Leprechaun
+
+    cd <somewhere>
+    git clone git@github.com:imvu/leprechaun.git
+
+## Build Leprechaun
+
+    cd leprechaun
+    scons CEFDIR=/path/to/cef_binary_3.2357.1276.gd4b589c_macosx64
+
+# Windows with Visual Studio 2010 SP1, Windows SDK v7.0A
+
+## Install [depot_tools](http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up)
+
+    cd <somewhere>
+    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    PATH=%PATH%;<somewhere>\depot_tools
+
+## Install [7zip](http://sourceforge.net/projects/sevenzip/files/latest/download)
+
+## Install [cmake](http://www.cmake.org/files/v3.2/cmake-3.2.3-win32-x86.exe)
+
+## Download the Windows [compiled CEF binary](https://cefbuilds.com/)
+
+Choose Windows 32bit CEF 3.2357.1280.geba024d
+
+Browse to the downloaded cef_binary_3.2357.1280.geba024d_windows32.7z file in explorer, right click, select 7zip, select Extract... and browse to a location on your hard drive.
+
+## Apply some patches to CEF
+
+These may not be necessary if using Visual Studio 2013 update 4, Windows SDK 8.1 as reported required by [CEF Branching and Building](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) under "Windows Build Requirements" for release 2357.
+
+C:\path\to\cef_binary_3.2357.1280.geba024d_windows32\include\base\cef_build.h:141
+
+    -#define OVERRIDE override
+    +#define OVERRIDE
+
+C:\path\to\cef_binary_3.2357.1280.geba024d_windows32\CMakeLists.txt:391
+
+       # /wd"4127"             = Ignore "conditional expression is constant" warning
+    +  # /wd"4189"             = Ignore "local variable is initialized but not referenced" warning
+       # /wd"4244"             = Ignore "conversion possible loss of data" warning
+    +  # /wd"4355"             = Ignore "'this' : used in base member initializer list" warning
+    +  # /wd"4510"             = Ignore "default constructor could not be generated" warning
+       # /wd"4512"             = Ignore "assignment operator could not be generated" warning
+    +  # /wd"4610"             = Ignore "class XXX can never be instantiated - user defined constructor required" warning
+       # /wd"4701"             = Ignore "potentially uninitialized local variable" warning
+       # /wd"4702"             = Ignore "unreachable code" warning
+       # /wd"4996"             = Ignore "function or variable may be unsafe" warning
+    -  set(CEF_COMPILER_FLAGS          "/MP /Gy /GR- /Zi /W4 /WX /wd\"4100\" /wd\"4127\" /wd\"4244\" /wd\"4512\" /wd\"4701\" /wd\"4702\" /wd\"4996\"")
+    +  set(CEF_COMPILER_FLAGS          "/MP /Gy /GR- /Zi /W4 /WX /wd\"4100\" /wd\"4127\" /wd\"4189\" /wd\"4244\" /wd\"4355\" /wd\"4510\" /wd\"4512\" /wd\"4610\" /wd\"4701\" /wd\"4702\" /wd\"4996\"")
+       # /MTd                  = Multithreaded debug runtime
+
+## Build the pre-built CEF binaries
+
+The libcef.dll file is pre-built and included in the pre-built CEF binary package. However, the
+libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
+sample CEF applications.
+
+    cd /D C:\path\to\cef_binary_3.2357.1280.geba024d_windows32
+    md build
+    cd build
+    "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
+    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
+    ninja cefclient cefsimple
+
+## Get Leprechaun
+
+    cd <somewhere>
+    git clone git@github.com:imvu/leprechaun.git
+
+## Build Leprechaun
+
+    cd leprechaun
+    scons CEFDIR=C:\path\to\cef_binary_3.2357.1280.geba024d_windows32

@@ -18,9 +18,10 @@ CEFCONFIG = ARGUMENTS.get('CEFCONFIG', 'Release')
 env.Append(
     CEFDIR=CEFDIR,
     CEFCONFIG=CEFCONFIG,
+    CEFRES='$CEFDIR/Resources',
 
     CPPPATH=[
-        '$CEFDIR/src/cef'
+        '$CEFDIR'
     ],
 )
 
@@ -28,13 +29,12 @@ if sys.platform.startswith('linux'):
     OUTDIR = OUTDIR.Dir('linux')
 
     SRC.extend(['linux_main.cpp',
-                '$CEFBIN/libcef_dll_wrapper.a'])
+                '$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a'])
 
     env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
     env.Append(
-        CEFBIN = '$CEFDIR/src/out/$CEFCONFIG/obj.target/cef',
-        LIBPATH=['$CEFDIR/src/out/$CEFCONFIG/lib.target/'],
+        LIBPATH=['$CEFDIR/$CEFCONFIG/'],
 
     	CPPFLAGS=[
             '-O3',
@@ -49,64 +49,83 @@ if sys.platform.startswith('linux'):
     )
     
     program = env.Program(OUTDIR.File('leprechaun'), SRC)
-    libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
-    locales = env.Install(OUTDIR, '$CEFDIR/src/out/$CEFCONFIG/locales')
+    libcef = env.Install(OUTDIR,'$CEFDIR/$CEFCONFIG/libcef$SHLIBSUFFIX') 
+    libffmpeg = env.Install(OUTDIR,'$CEFDIR/$CEFCONFIG/libffmpegsumo$SHLIBSUFFIX') 
+    natives_blob = env.Install(OUTDIR, '$CEFDIR/$CEFCONFIG/natives_blob.bin')
+    snapshot_blob = env.Install(OUTDIR, '$CEFDIR/$CEFCONFIG/snapshot_blob.bin')
+    locales = env.Install(OUTDIR, '$CEFRES/locales')
+    cef_pak = env.Install(OUTDIR, '$CEFRES/cef.pak')
+    devtools_pak = env.Install(OUTDIR, '$CEFRES/devtools_resources.pak')
+    cef_100_pak = env.Install(OUTDIR, '$CEFRES/cef_100_percent.pak')
+    cef_200_pak = env.Install(OUTDIR, '$CEFRES/cef_200_percent.pak')
+    icudtl_dat = env.Install(OUTDIR, '$CEFRES/icudtl.dat')
 
     env.Default([
             program,
             libcef,
-            locales
+            libffmpeg,
+            natives_blob,
+            snapshot_blob,
+            locales,
+            cef_pak,
+            devtools_pak,
+            cef_100_pak,
+            cef_200_pak,
+            icudtl_dat
     ])
 
 elif sys.platform == 'darwin':
     OUTDIR = OUTDIR.Dir('mac')
 
     SRC.append('mac_main.mm')
-    SRC.append('$CEFBIN/libcef_dll_wrapper.a')
+    SRC.append('$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a')
 
     env.Append(
-        CCFLAGS=['-arch', 'i386', '-g', '-O0', '-fvisibility=hidden'],
-        LINKFLAGS=['-arch', 'i386'],
-        FRAMEWORKS=['CoreFoundation', 'AppKit'],
-        CEFBIN='$CEFDIR/src/xcodebuild/$CEFCONFIG',
-        LIBPATH=[
-            '$CEFBIN'
-        ],
+        CEFBIN = '$CEFDIR/$CEFCONFIG',
+        CCFLAGS=['-arch', 'x86_64', '-g', '-O0', '-fvisibility=hidden'],
+        LINKFLAGS=['-arch', 'x86_64'],
+        FRAMEWORKS=['CoreFoundation', 'AppKit', 'Chromium Embedded Framework'],
+        FRAMEWORKPATH=['$CEFBIN'],
+        CEFBIN_FRAMEWORK='$CEFBIN/Chromium Embedded Framework.framework',
 
         CPPFLAGS=[
             '-O3',
             '-g'
         ],
         LIBS=[
-            'c++',
+            'stdc++.6',
             'objc',
-            'cef',
             'ssl'
         ]
     )
 
     BUNDLE = OUTDIR.Dir('leprechaun.app')
 
-    libcef = env.File('$CEFBIN/libcef$SHLIBSUFFIX')
+    [leprechaun] = env.Program('leprechaun', SRC)
+    def fixupLeprechaun(target, source, env):
+        [target] = target
+        env.Execute('install_name_tool -change "@executable_path/Chromium Embedded Framework" "@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" {0}'.format(target.path))
+    env.AddPostAction(leprechaun, fixupLeprechaun)
 
-    process_helper = env.Program(
+    [process_helper] = env.Program(
         'leprechaun Helper',
         ['process_helper.cpp',
          'Application.cpp',
-         '$CEFBIN/libcef_dll_wrapper.a'])
-
-    FRAMEWORKS = env.Dir('$CEFBIN/cefclient.app/Contents/Frameworks')
+         'WindowClient.cpp',
+         '$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a'])
+    def fixupHelper(target, source, env):
+        [target] = target
+        env.Execute('install_name_tool -change "@executable_path/Chromium Embedded Framework" "@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" "{0}"'.format(target.path))
+    env.AddPostAction(process_helper, fixupHelper)
 
     d = env.Default([
         env.Install(BUNDLE.Dir('Contents'), 'Info.plist'),
-        env.Install(BUNDLE.Dir('Contents/MacOS'), libcef),
-        env.Program(BUNDLE.Dir('Contents/MacOS').File('leprechaun'), SRC),
-        env.Install(BUNDLE.Dir('Contents/Frameworks'), FRAMEWORKS.Dir('Chromium Embedded Framework.framework/')),
+        env.Install(BUNDLE.Dir('Contents/MacOS'), [leprechaun]),
+        env.Install(BUNDLE.Dir('Contents/Frameworks'), '$CEFBIN_FRAMEWORK'),
         Command(BUNDLE.File('Contents/Frameworks/leprechaun Helper.app/Contents/Info.plist'), 'Helper.plist', Copy('$TARGET', '$SOURCE')),
         env.Install(BUNDLE.Dir('Contents/Frameworks/leprechaun Helper.app/Contents/MacOS'), [
-            process_helper,
-            libcef
-            ])
+            [process_helper]
+            ]),
     ])
 
 else: # Windows
@@ -114,32 +133,44 @@ else: # Windows
 
     SRC.extend(['win_main.cpp'])
 
+    def getEnvPath(var, cefPaths):
+        rawLibPath = os.environ[var]
+        envLibPath = filter(lambda x: len(x) > 0, rawLibPath.split(';'))
+        return envLibPath + cefPaths
+
     env.Append(
-        CEFBIN = '$CEFDIR/src/build/$CEFCONFIG',
-        LIBPATH=[
-	    '$CEFBIN/lib',
-            'c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\lib',
-            'C:\Program Files\Microsoft SDKs\Windows\\v6.0A\Lib',
-        ],
+        CEFBIN = '$CEFDIR\\$CEFCONFIG',
 
-	CPPPATH=[
-            'C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include',
-            'C:\Program Files\Microsoft SDKs\Windows\\v6.0A\Include',
-        ],
+        LIBPATH=getEnvPath('LIBPATH', [
+            os.environ['WindowsSdkDir'] + '\\Lib',
+            '$CEFBIN',
+            '$CEFDIR\\build\\libcef_dll'
+        ]),
 
-	CPPFLAGS=[
+        CPPPATH=getEnvPath('INCLUDE', [
+            '$CEFDIR\\include'
+        ]),
+
+        CPPFLAGS=[
             '/MT',
-            '/EHsc',
-            '/arch:SSE2',
+            '/O2',
+            '/Ob2',
+            '/GF',
+            '/D NDEBUG',
+            '/D _NDEBUG',
         ],
 
-	LINKFLAGS=[
+        LINKFLAGS=[
             '/MACHINE:x86',
         ],
 
         LIBS=[
             'libcef_dll_wrapper',
             'libcef',
+            'comctl32',
+            'rpcrt4',
+            'shlwapi',
+            'kernel32'
         ]
     )
 
@@ -149,14 +180,13 @@ else: # Windows
         LINK='"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\bin\\link.exe"',
     )
 
-    program = env.Program(OUTDIR.File('leprechaun.exe'), SRC)
-    libcef = env.Install(OUTDIR, '$CEFBIN/libcef$SHLIBSUFFIX')
-    locales = env.Install(OUTDIR, '$CEFDIR/src/build/$CEFCONFIG/locales')
-
-    print env.Dump()
-
     env.Default([
-            program,
-            libcef,
-            locales
+        env.Program(OUTDIR.File('leprechaun.exe'), SRC),
+        env.Install(OUTDIR, '$CEFBIN\\libcef$SHLIBSUFFIX'),
+        env.Install(OUTDIR, '$CEFRES\\locales'),
+        env.Install(OUTDIR, '$CEFRES\\cef.pak'),
+        env.Install(OUTDIR, '$CEFRES\\cef_100_percent.pak'),
+        env.Install(OUTDIR, '$CEFRES\\cef_200_percent.pak'),
+        env.Install(OUTDIR, '$CEFRES\\devtools_resources.pak'),
+        env.Install(OUTDIR, '$CEFRES\\icudtl.dat'),
     ])

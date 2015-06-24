@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include "include/cef_base.h"
 #include "include/cef_client.h"
 
@@ -24,9 +26,14 @@ struct WindowClient : public CefClient
     virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler();
 
     // CefLifeSpanHandler
-    CefRefPtr<CefBrowser> browser;
+    virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser);
+    virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser);
 
-    virtual void OnAfterCreated(CefRefPtr<CefBrowser> aBrowser);
+    // CefDisplayHandler
+    virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                                  const CefString& message,
+                                  const CefString& source,
+                                  int line);
 
     // CefRequestHandler
     virtual bool OnProcessMessageReceived(
@@ -34,6 +41,12 @@ struct WindowClient : public CefClient
         CefProcessId source_process,
         CefRefPtr<CefProcessMessage> message
     );
+
+    void CloseAllBrowsers();
+
+private:
+    typedef std::list<CefRefPtr<CefBrowser> > BrowserList;
+    BrowserList browsers_;
 
     IMPLEMENT_REFCOUNTING(WindowClient);
 };

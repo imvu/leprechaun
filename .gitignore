@@ -1,4 +1,5 @@
 *.o
+*.obj
 build/
 .sconsign.dblite
 TAGS

@@ -12,18 +12,27 @@
 #include "include/cef_app.h"
 
 struct Application : public CefApp
+                   , public CefBrowserProcessHandler
                    , public CefRenderProcessHandler
                    , public CefV8Handler
 {
     Application();
 
+    // CefApp
+    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler();
+
     virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler();
+
+    // CefRenderProcessHandler
+    virtual void OnBrowserDestroyed(CefRefPtr<CefBrowser> browser);
 
     virtual void OnContextCreated(
         CefRefPtr<CefBrowser> browser,
         CefRefPtr<CefFrame> frame,
         CefRefPtr<CefV8Context> context
     );
+
+    virtual void OnContextInitialized();
 
     virtual void OnContextReleased(
         CefRefPtr<CefBrowser> browser,

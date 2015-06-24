@@ -1,37 +1,51 @@
 
 #include "Application.h"
 
+#include <errno.h>
+
 #include <stdlib.h>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
+
+#include "WindowClient.h"
 
 int s_result = 0;
+
+std::string escape(const std::string & value, std::string::value_type escape_char, std::string::value_type replace_char) {
+    std::ostringstream escaped;
+    for (std::string::const_iterator i = value.begin(); i != value.end(); ++i) {
+        const std::string::value_type c = (*i);
+        if ((c == escape_char) || (c == replace_char)) {
+            escaped << escape_char << c;
+        } else {
+            escaped << c;
+        }
+    }
+    return escaped.str();
+}
+std::string escapeQuotes(const std::string & value) {
+    return escape(value, '\\', '\"');
+}
 
 void noOpenWindow() {
     printf("Test tried to window.open!  This is bad!\n");
     exit(1);
 }
 
-std::string readFile(const std::string& fileName) {
-    return std::string(
-        std::istreambuf_iterator<char>(std::ifstream(fileName.c_str()).rdbuf()),
-        std::istreambuf_iterator<char>());
-}
-
-void bootstrap(const CefRefPtr<CefFrame>& frame, const std::string& fileName) {
-    std::string sourceCode = readFile(fileName);
-    if (sourceCode.empty()) {
-        return;
-    }
-
-    frame->ExecuteJavaScript(sourceCode, "", 0);
-}
-
 Application::Application() {
+}
+
+CefRefPtr<CefBrowserProcessHandler> Application::GetBrowserProcessHandler() {
+    return this;
 }
 
 CefRefPtr<CefRenderProcessHandler> Application::GetRenderProcessHandler() {
     return this;
+}
+
+void Application::OnBrowserDestroyed(CefRefPtr<CefBrowser> browser) {
+    this->firstBrowser = NULL;
 }
 
 void Application::OnContextCreated(
@@ -40,6 +54,9 @@ void Application::OnContextCreated(
     CefRefPtr<CefV8Context> context
 ) {
     CefRefPtr<CefV8Value> global = context->GetGlobal();
+
+    CefRefPtr<CefV8Value> notification = CefV8Value::CreateFunction("Notification", this);
+    global->SetValue("Notification", notification, V8_PROPERTY_ATTRIBUTE_READONLY);
 
     if (this->firstBrowser != NULL) {
         // Disallow window.open
@@ -68,10 +85,43 @@ void Application::OnContextCreated(
     CefRefPtr<CefV8Value> log = CefV8Value::CreateFunction("log", this);
     this->leprechaunObj->SetValue("log", log, V8_PROPERTY_ATTRIBUTE_READONLY);
 
+    CefRefPtr<CefV8Value> args = CefV8Value::CreateArray(0);
+    this->leprechaunObj->SetValue("args", args, V8_PROPERTY_ATTRIBUTE_NONE);
+
     global->SetValue("leprechaun", this->leprechaunObj, V8_PROPERTY_ATTRIBUTE_READONLY);
-    printf("Asking browser proc for arguments\n");
-    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("getArguments");
-    browser->SendProcessMessage(PID_BROWSER, message);
+}
+
+void Application::OnContextInitialized() {
+    CefRefPtr<WindowClient> client(new WindowClient());
+
+    CefWindowInfo info;
+    //info.windowless_rendering_enabled = true;
+
+    CefBrowserSettings settings;
+    settings.web_security = STATE_DISABLED;
+
+    CefCommandLine::ArgumentList arguments;
+    CefCommandLine::GetGlobalCommandLine()->GetArguments(arguments);
+
+    std::ostringstream content;
+    content << "data:text/html,<!DOCTYPE html><html><head><title>Leprechauns are oh so magically delicious</title></head><body>\n";
+    content << "<script>leprechaun.args = [";
+    for (unsigned int i = 0; i < arguments.size(); ++i) {
+        content << ((i > 0) ? "," : "") << '\"' << escapeQuotes(arguments[i]) << '\"';
+    }
+    content << "];</script>\n";
+    content << "<script src=\"" << escapeQuotes(arguments[0]) << "\"></script>\n";
+    content << "</body><html>";
+
+
+    // The script to be run is read from disk and executed in the browser frame in bootstrap() above.
+    CefBrowserHost::CreateBrowser(
+        info,
+        client.get(),
+        content.str(),
+        settings,
+        NULL
+    );
 }
 
 void Application::OnContextReleased(
@@ -89,23 +139,8 @@ bool Application::OnProcessMessageReceived(
     CefProcessId source_process, 
     CefRefPtr<CefProcessMessage> message
 ) {
-    if (message->GetName() == "arguments") {
-        printf("Handling arguments\n");
-        CefRefPtr<CefListValue> arguments = message.get()->GetArgumentList();
-        CefRefPtr<CefV8Context> context = browser->GetMainFrame()->GetV8Context();
-        context->Enter();
-        CefRefPtr<CefV8Value> args = CefV8Value::CreateArray(arguments->GetSize());
-        for (unsigned int i=0; i < arguments->GetSize(); ++i) {
-            args->SetValue(i, CefV8Value::CreateString(arguments->GetString(i)));
-        }
-        this->leprechaunObj->SetValue("args", args, V8_PROPERTY_ATTRIBUTE_READONLY);
-        bootstrap(browser->GetMainFrame(), message.get()->GetArgumentList()->GetString(0));
-        context->Exit();
-        return true;
-    } else {
-        printf("Unknown render message %s\n", message->GetName().ToString().c_str());
-	return false;
-    }
+    printf("Unknown render message %s\n", message->GetName().ToString().c_str());
+    return false;
 }
 
 // CefV8Handler
