@@ -9,6 +9,8 @@
 #include <iomanip>
 
 #include "WindowClient.h"
+#include "include/base/cef_bind.h"
+#include "include/wrapper/cef_closure_task.h"
 
 int s_result = 0;
 
@@ -70,7 +72,7 @@ void Application::OnContextCreated(
     }
     this->firstBrowser = browser;
 
-    this->leprechaunObj = CefV8Value::CreateObject(0);
+    this->leprechaunObj = CefV8Value::CreateObject(nullptr, nullptr);
     CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
     this->leprechaunObj->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
     CefRefPtr<CefV8Value> echo = CefV8Value::CreateFunction("echo", this);
@@ -171,7 +173,7 @@ bool Application::Execute(
     } else if (name == "openWindow") {
         CefPostTask(
             TID_UI,
-            NewCefRunnableFunction(&noOpenWindow)
+            CefCreateClosureTask(base::Bind(&noOpenWindow))
             );
         return true;
 

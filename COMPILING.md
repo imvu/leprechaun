@@ -1,14 +1,14 @@
 These instructions were put together in June of 2015.
 
-# Ubuntu 12.04
+# Ubuntu 14.04
 
-## Install p7zip
-
-    sudo apt-get install p7zip
-
-## Download the compiled CEF binary for Linux 64bit or build CEF version 2357 from source
+## Download the compiled CEF binary for Linux 64bit or build CEF version 3.2924.1571.gcdcdfa9 from source
 
 The pre-compiled binary distribution of CEF is not compatible with libstdc++ available on Ubuntu Precise so you will either want to build CEF from source or manually upgrade libstdc++.
+
+## Install required dev packages
+
+    sudo apt-get install libgtk2.0-dev libgtkglext1-dev ninja-build
 
 ### To build from source:
 
@@ -18,12 +18,12 @@ The pre-compiled binary distribution of CEF is not compatible with libstdc++ ava
 
 ### To use the pre-compiled binary:
 
-[Linux 64bit CEF 3.2357.1276](https://cefbuilds.com/)
+[Linux 64bit CEF 3.2357.1276](http://opensource.spotify.com/cefbuilds/index.html)
 
 Once downloaded, unpack it:
 
     cd <somewhere>
-    p7zip -d /path/to/cef_binary_3.2357.1280.7z
+    tar xvf /path/to/cef_binary_3.2924.1571.gcdcdfa9_linux64.tar.bz2
 
 ## Install cmake 3.x
 
@@ -36,20 +36,6 @@ Building the CEF binaries requires cmake >= 2.8.12.2 which is not available as a
     ./bootstrap
     make
     sudo make install
-
-## Install depot\_tools
-
-This can be done either by installing the depot\_tools debian package or by cloning the git repository.
-
-### Install depot\_tools debian package:
-
-    sudo apt-get install depot_tools
-
-### Clone the depot\_tools git repository:
-
-    cd <somewhere>
-    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    export PATH=$PATH:`pwd`/depot_tools
 
 ## Build the pre-built CEF binaries
 
@@ -67,7 +53,7 @@ instances of "-std=gnu++11" to "-std=c++0x".
     mkdir build
     cd build
     cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
-    ninja cefclient cefsimple
+    ninja libcef_dll_wrapper
 
 ## Install scons
 

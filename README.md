@@ -22,7 +22,7 @@ Leprechaun (as of this writing) embeds Chrome 43.0.2357.81 via the thoroughly ex
 # Compiling
 Leprechaun has been tested to build on Linux Ubuntu Precise (12.04), Windows 7, and OSX 10.9.  No other configurations have been tested.
 
-First, download the appropriate [compiled CEF binary](https://cefbuilds.com/) or [build CEF from source](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) using the automated build process. We are using Branch 2357. Building Leprechaun on Linux Ubuntu Precise cannot use the pre-built CEF binaries because of an incompatibility with the default libstdc++ package.
+First, download the appropriate [compiled CEF binary](http://opensource.spotify.com/cefbuilds/index.html) or [build CEF from source](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) using the automated build process. We are using Branch 2357. Building Leprechaun on Linux Ubuntu Precise cannot use the pre-built CEF binaries because of an incompatibility with the default libstdc++ package.
 * Linux 64bit CEF 3.2357.1276
 * Mac 64bit CEF 3.2357.1276
 * Windows 32bit CEF 3.2357.1280
@@ -56,7 +56,7 @@ Build the pre-built CEF binary (yes, the pre-built CEF binaries need to be built
     cd <somewhere>/cef_binary_3.2357.1280_<some_hash>/
     mkdir build
     cd build
-    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
+    cmake -DCMAKE_BUILD_TYPE=Release ..
     ninja cefclient cefsimple
 
 Install SCons

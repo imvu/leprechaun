@@ -29,7 +29,7 @@ if sys.platform.startswith('linux'):
     OUTDIR = OUTDIR.Dir('linux')
 
     SRC.extend(['linux_main.cpp',
-                '$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a'])
+                '$CEFDIR/build/libcef_dll_wrapper/libcef_dll_wrapper.a'])
 
     env.ParseConfig('pkg-config --cflags --libs gtk+-2.0')
 
@@ -39,6 +39,10 @@ if sys.platform.startswith('linux'):
     	CPPFLAGS=[
             '-O3',
             '-g'
+        ],
+
+        CXXFLAGS=[
+            '-std=c++11'
         ],
 
         LIBS=[
@@ -63,7 +67,7 @@ if sys.platform.startswith('linux'):
     env.Default([
             program,
             libcef,
-            libffmpeg,
+            # libffmpeg,
             natives_blob,
             snapshot_blob,
             locales,
