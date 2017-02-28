@@ -82,7 +82,7 @@ elif sys.platform == 'darwin':
     OUTDIR = OUTDIR.Dir('mac')
 
     SRC.append('mac_main.mm')
-    SRC.append('$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a')
+    SRC.append('$CEFDIR/build/libcef_dll_wrapper/libcef_dll_wrapper.a')
 
     env.Append(
         CEFBIN = '$CEFDIR/$CEFCONFIG',
@@ -116,7 +116,7 @@ elif sys.platform == 'darwin':
         ['process_helper.cpp',
          'Application.cpp',
          'WindowClient.cpp',
-         '$CEFDIR/build/libcef_dll/libcef_dll_wrapper.a'])
+         '$CEFDIR/build/libcef_dll_wrapper/libcef_dll_wrapper.a'])
     def fixupHelper(target, source, env):
         [target] = target
         env.Execute('install_name_tool -change "@executable_path/Chromium Embedded Framework" "@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" "{0}"'.format(target.path))

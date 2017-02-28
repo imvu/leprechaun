@@ -113,6 +113,12 @@ Extract the downloaded archive file by navigating to it using Finder and double 
     -#define OVERRIDE override
     +#define OVERRIDE
 
+/path/to/cef_binary_3.2924.1571.gcdcdfa9_macosx64/include/internal/cef_types_wrappers.h:985
+
+    -s->range = { 0, 0 };
+    +s->range.from = 0;
+    +s->range.to = 0;
+
 ## Build the pre-built CEF binaries
 
 The libcef.so file is pre-built and included in the pre-built CEF binary package. However, the

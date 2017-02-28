@@ -72,7 +72,7 @@ void Application::OnContextCreated(
     }
     this->firstBrowser = browser;
 
-    this->leprechaunObj = CefV8Value::CreateObject(nullptr, nullptr);
+    this->leprechaunObj = CefV8Value::CreateObject(0, 0);
     CefRefPtr<CefV8Value> exit = CefV8Value::CreateFunction("exit", this);
     this->leprechaunObj->SetValue("exit", exit, V8_PROPERTY_ATTRIBUTE_READONLY);
     CefRefPtr<CefV8Value> echo = CefV8Value::CreateFunction("echo", this);
