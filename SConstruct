@@ -8,6 +8,7 @@ SRC = [
 
 env = Environment(
   ENV=os.environ,
+  TARGET_ARCH='x86'
 )
 
 OUTDIR = Dir('#/leprechaun-binaries')
@@ -148,7 +149,7 @@ else: # Windows
         LIBPATH=getEnvPath('LIBPATH', [
             os.environ['WindowsSdkDir'] + '\\Lib',
             '$CEFBIN',
-            '$CEFDIR\\build\\libcef_dll'
+            '$CEFDIR\\build\\libcef_dll_wrapper\\$CEFCONFIG'
         ]),
 
         CPPPATH=getEnvPath('INCLUDE', [
@@ -157,11 +158,16 @@ else: # Windows
 
         CPPFLAGS=[
             '/MT',
+            '/MP',
             '/O2',
             '/Ob2',
             '/GF',
             '/D NDEBUG',
             '/D _NDEBUG',
+        ],
+
+        CXXFLAGS=[
+            '/EHsc'
         ],
 
         LINKFLAGS=[
@@ -178,23 +184,15 @@ else: # Windows
         ]
     )
 
-    env.Replace(
-        TARGET_ARCH='x86',
-        CC='"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\bin\\cl.exe"',
-        LINK='"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\VC\\bin\\link.exe"',
-    )
-
     env.Default([
         env.Program(OUTDIR.File('leprechaun.exe'), SRC),
         env.Install(OUTDIR, '$CEFBIN\\libcef$SHLIBSUFFIX'),
         env.Install(OUTDIR, '$CEFBIN\\d3dcompiler_43$SHLIBSUFFIX'),
         env.Install(OUTDIR, '$CEFBIN\\d3dcompiler_47$SHLIBSUFFIX'),
-        env.Install(OUTDIR, '$CEFBIN\\ffmpegsumo$SHLIBSUFFIX'),
         env.Install(OUTDIR, '$CEFBIN\\libEGL$SHLIBSUFFIX'),
         env.Install(OUTDIR, '$CEFBIN\\libGLESv2$SHLIBSUFFIX'),
         env.Install(OUTDIR, '$CEFBIN\\natives_blob.bin'),
         env.Install(OUTDIR, '$CEFBIN\\snapshot_blob.bin'),
-        env.Install(OUTDIR, '$CEFBIN\\wow_helper.exe'),
         env.Install(OUTDIR, '$CEFRES\\locales'),
         env.Install(OUTDIR, '$CEFRES\\cef.pak'),
         env.Install(OUTDIR, '$CEFRES\\cef_100_percent.pak'),

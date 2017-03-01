@@ -1,8 +1,10 @@
 These instructions were put together in June of 2015.
 
+We are using cef 3.2924.1575.g97389a9
+
 # Ubuntu 14.04
 
-## Download the compiled CEF binary for Linux 64bit or build CEF version 3.2924.1571.gcdcdfa9 from source
+## Download the compiled CEF binary for Linux 64bit or build CEF version 3.2924.1575.g97389a9 from source
 
 The pre-compiled binary distribution of CEF is not compatible with libstdc++ available on Ubuntu Precise so you will either want to build CEF from source or manually upgrade libstdc++.
 
@@ -23,7 +25,7 @@ The pre-compiled binary distribution of CEF is not compatible with libstdc++ ava
 Once downloaded, unpack it:
 
     cd <somewhere>
-    tar xvf /path/to/cef_binary_3.2924.1571.gcdcdfa9_linux64.tar.bz2
+    tar xvf /path/to/cef_binary_3.2924.1575.g97389a9_linux64.tar.bz2
 
 ## Install cmake 3.x
 
@@ -43,7 +45,7 @@ The libcef.so file is pre-built and included in the pre-built CEF binary package
 libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
 sample CEF applications.
 
-    cd /path/to/cef_binary_3.2357.1280_<some_hash>_linux64/
+    cd /path/to/cef_binary_3.2924.1575.g97389a9_linux64/
 
 The cmake configuration includes a compiler flag that is incompatible with the version of gcc that
 is available as a debian package on Ubuntu Precise. Either upgrade your gcc compiler to 4.7 or else
@@ -92,7 +94,7 @@ The leprechaun binaries will be under leprechaun-binaries/linux/
 
 ## Download the 64-bit compiled binary CEF library
 
-[Mac 64bit CEF 3.2357.1276.gd4b589c](https://cefbuilds.com/)
+[Mac 64bit CEF 3.2924.1575.g97389a9](https://cefbuilds.com/)
 
 Extract the downloaded archive file by navigating to it using Finder and double clicking on it.
 
@@ -108,7 +110,7 @@ Extract the downloaded archive file by navigating to it using Finder and double 
 
 ## Apply some patches to CEF
 
-/path/to/cef_binary_3.2357.1276.gd4b589c_macosx64/include/base/cef_build.h:141
+/path/to/cef_binary_3.2924.1575.g97389a9_macosx64/include/base/cef_build.h:141
 
     -#define OVERRIDE override
     +#define OVERRIDE
@@ -125,7 +127,7 @@ The libcef.so file is pre-built and included in the pre-built CEF binary package
 libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
 sample CEF applications.
 
-    cd /path/to/cef_binary_3.2357.1276.gd4b589c_macosx64
+    cd /path/to/cef_binary_3.2924.1575.g97389a9_macosx64
     mkdir build
     cd build
     /Applications/CMake.app/Contents/bin/cmake -G "Ninja" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release ..
@@ -148,50 +150,23 @@ sample CEF applications.
 ## Build Leprechaun
 
     cd leprechaun
-    scons CEFDIR=/path/to/cef_binary_3.2357.1276.gd4b589c_macosx64
+    scons CEFDIR=/path/to/cef_binary_3.2924.1575.g97389a9_macosx64
 
-# Windows with Visual Studio 2010 SP1, Windows SDK v7.0A
-
-## Install [depot_tools](http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up)
-
-    cd <somewhere>
-    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    PATH=%PATH%;<somewhere>\depot_tools
-
-## Install [7zip](http://sourceforge.net/projects/sevenzip/files/latest/download)
+# Windows with Visual Studio 2014
 
 ## Install [cmake](http://www.cmake.org/files/v3.2/cmake-3.2.3-win32-x86.exe)
 
+## Install [Python](http://python.org)
+
+Do not use Cygwin Python
+
+## Install [SCons](http://scons.org/)
+
 ## Download the Windows [compiled CEF binary](https://cefbuilds.com/)
 
-Choose Windows 32bit CEF 3.2357.1280.geba024d
+Choose Windows 32bit CEF 3.2924.1575.g97389a9
 
-Browse to the downloaded cef_binary_3.2357.1280.geba024d_windows32.7z file in explorer, right click, select 7zip, select Extract... and browse to a location on your hard drive.
-
-## Apply some patches to CEF
-
-These may not be necessary if using Visual Studio 2013 update 4, Windows SDK 8.1 as reported required by [CEF Branching and Building](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) under "Windows Build Requirements" for release 2357.
-
-C:\path\to\cef_binary_3.2357.1280.geba024d_windows32\include\base\cef_build.h:141
-
-    -#define OVERRIDE override
-    +#define OVERRIDE
-
-C:\path\to\cef_binary_3.2357.1280.geba024d_windows32\CMakeLists.txt:391
-
-       # /wd"4127"             = Ignore "conditional expression is constant" warning
-    +  # /wd"4189"             = Ignore "local variable is initialized but not referenced" warning
-       # /wd"4244"             = Ignore "conversion possible loss of data" warning
-    +  # /wd"4355"             = Ignore "'this' : used in base member initializer list" warning
-    +  # /wd"4510"             = Ignore "default constructor could not be generated" warning
-       # /wd"4512"             = Ignore "assignment operator could not be generated" warning
-    +  # /wd"4610"             = Ignore "class XXX can never be instantiated - user defined constructor required" warning
-       # /wd"4701"             = Ignore "potentially uninitialized local variable" warning
-       # /wd"4702"             = Ignore "unreachable code" warning
-       # /wd"4996"             = Ignore "function or variable may be unsafe" warning
-    -  set(CEF_COMPILER_FLAGS          "/MP /Gy /GR- /Zi /W4 /WX /wd\"4100\" /wd\"4127\" /wd\"4244\" /wd\"4512\" /wd\"4701\" /wd\"4702\" /wd\"4996\"")
-    +  set(CEF_COMPILER_FLAGS          "/MP /Gy /GR- /Zi /W4 /WX /wd\"4100\" /wd\"4127\" /wd\"4189\" /wd\"4244\" /wd\"4355\" /wd\"4510\" /wd\"4512\" /wd\"4610\" /wd\"4701\" /wd\"4702\" /wd\"4996\"")
-       # /MTd                  = Multithreaded debug runtime
+Browse to the downloaded cef_binary_3.2924.1575.g97389a9_windows32.7z file in explorer, right click, select 7zip, select Extract... and browse to a location on your hard drive.
 
 ## Build the pre-built CEF binaries
 
@@ -199,7 +174,7 @@ The libcef.dll file is pre-built and included in the pre-built CEF binary packag
 libcef_dll_wrapper library is not pre-built. It needs to be built manually along with the two
 sample CEF applications.
 
-    cd /D C:\path\to\cef_binary_3.2357.1280.geba024d_windows32
+    cd /D C:\path\to\cef_binary_3.2924.1575.g97389a9_windows32
     md build
     cd build
     "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
@@ -214,4 +189,5 @@ sample CEF applications.
 ## Build Leprechaun
 
     cd leprechaun
-    scons CEFDIR=C:\path\to\cef_binary_3.2357.1280.geba024d_windows32
+    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\Bin\vcvars32.bat"
+    scons CEFDIR=C:\path\to\cef_binary_3.2924.1575.g97389a9_windows32
